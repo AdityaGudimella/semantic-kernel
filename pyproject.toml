@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "semantic-kernel"
+version = "0.1.0"
+description = "Integrate cutting-edge LLM technology quickly and easily into your applications"
+authors = ["Microsoft Corporation"]
+homepage = "https://github.com/microsoft/semantic-kernel"
+repository = "https://github.com/microsoft/semantic-kernel"
+readme = "README.md"
+packages = [{include = "semantic_kernel"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

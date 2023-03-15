@@ -44,7 +44,7 @@ Project maintainers will merge accepted code changes from contributors.
 DO's:
 
 - **DO** follow the standard
-  [.NET coding style](https://learn.microsoft.com/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+  [Python Style Guide](https://peps.python.org/pep-0008/)
 - **DO** give priority to the current style of the project or file you're changing
   if it diverges from the general guidelines.
 - **DO** include tests when adding new features. When fixing bugs, start with
