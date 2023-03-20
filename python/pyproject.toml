@@ -21,6 +21,9 @@ ruff = "^0.0.257"
 [tool.isort]
 profile = "black"
 
+[tool.ruff]
+select = ["E", "F", "I", "N"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
