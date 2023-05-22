@@ -13,11 +13,14 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
+from semantic_kernel.serialization import to_json, from_json
 from semantic_kernel.utils.null_logger import NullLogger
 from semantic_kernel.utils.settings import (
     azure_openai_settings_from_dot_env,
     openai_settings_from_dot_env,
 )
+
+__version__ = "0.2.8.dev"
 
 __all__ = [
     "Kernel",
@@ -33,4 +36,7 @@ __all__ = [
     "SKContext",
     "memory",
     "core_skills",
+    "from_json",
+    "to_json",
+    "__version__",
 ]

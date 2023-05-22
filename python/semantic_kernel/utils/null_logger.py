@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from logging import Logger
+from typing import Any, Union, Tuple
 
 
 class NullLogger(Logger):
@@ -9,7 +10,7 @@ class NullLogger(Logger):
     """
 
     def __init__(self) -> None:
-        pass
+        self.name = "NullLogger"
 
     def debug(self, _: str) -> None:
         pass
@@ -22,3 +23,6 @@ class NullLogger(Logger):
 
     def error(self, _: str) -> None:
         pass
+
+    def __reduce__(self) -> Union[str, Tuple[Any, ...]]:
+        return NullLogger, ()
