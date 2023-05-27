@@ -2,27 +2,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Remote Attach",
-      "type": "python",
-      "request": "attach",
-      "connect": {
-        "host": "localhost",
-        "port": 10001
-      },
-      "pathMappings": [
-        {
-          "localRoot": "${workspaceFolder}",
-          "remoteRoot": "."
-        }
-      ],
-      "justMyCode": true
-    },
-    {
-      "name": ".NET Core Launch (CopilotChatApi)",
+      "name": ".NET Core Launch (CopilotChatWebApi)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build (CopilotChatApi)",
-      "program": "${workspaceFolder}/samples/apps/copilot-chat-app/webapi/bin/Debug/net6.0/CopilotChatApi.dll",
+      "preLaunchTask": "build (CopilotChatWebApi)",
+      // If you have changed target frameworks, make sure to update the program path.
+      "program": "${workspaceFolder}/samples/apps/copilot-chat-app/webapi/bin/Debug/net6.0/CopilotChatWebApi.dll",
       "args": [],
       "cwd": "${workspaceFolder}/samples/apps/copilot-chat-app/webapi",
       "console": "internalConsole",
