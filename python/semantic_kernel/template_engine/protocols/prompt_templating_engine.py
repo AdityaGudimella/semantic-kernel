@@ -1,17 +1,21 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import List, Optional, Protocol
+import abc
+from typing import List, Optional
+
+import pydantic as pdt
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.template_engine.blocks.block import Block
 
 
-class PromptTemplatingEngine(Protocol):
+class PromptTemplatingEngine(pdt.BaseModel, abc.ABC):
     """
     Prompt templating engine protocol.
     """
 
+    @abc.abstractmethod
     def extract_blocks(
         self, template_text: Optional[str] = None, validate: bool = True
     ) -> List[Block]:
@@ -25,8 +29,9 @@ class PromptTemplatingEngine(Protocol):
         :return: A list of all the blocks, ie the template tokenized in
             text, variables and function calls
         """
-        ...
+        raise NotImplementedError
 
+    @abc.abstractmethod
     async def render_async(self, template_text: str, context: SKContext) -> str:
         """
         Given a prompt template, replace the variables with their values
@@ -37,8 +42,9 @@ class PromptTemplatingEngine(Protocol):
         :param context: Access into the current kernel execution context
         :return: The prompt template ready to be used for an AI request
         """
-        ...
+        raise NotImplementedError
 
+    @abc.abstractmethod
     async def render_blocks_async(self, blocks: List[Block], context: SKContext) -> str:
         """
         Given a list of blocks render each block and compose the final result.
@@ -47,8 +53,9 @@ class PromptTemplatingEngine(Protocol):
         :param context: Access into the current kernel execution context
         :return: The prompt template ready to be used for an AI request
         """
-        ...
+        raise NotImplementedError
 
+    @abc.abstractmethod
     def render_variables(
         self, blocks: List[Block], variables: Optional[ContextVariables] = None
     ) -> List[Block]:
@@ -61,8 +68,9 @@ class PromptTemplatingEngine(Protocol):
         :return: An updated list of blocks where Variable Blocks have rendered to
             Text Blocks
         """
-        ...
+        raise NotImplementedError
 
+    @abc.abstractmethod
     async def render_code_async(
         self, blocks: List[Block], execution_context: SKContext
     ) -> List[Block]:
@@ -75,4 +83,4 @@ class PromptTemplatingEngine(Protocol):
         :return: An updated list of blocks where Code Blocks have rendered to
             Text Blocks
         """
-        ...
+        raise NotImplementedError

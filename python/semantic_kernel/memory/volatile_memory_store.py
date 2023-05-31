@@ -6,9 +6,9 @@ from typing import Dict, List, Optional, Tuple
 
 from numpy import array, linalg, ndarray
 
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
-from semantic_kernel.utils.null_logger import NullLogger
 
 
 class VolatileMemoryStore(MemoryStoreBase):

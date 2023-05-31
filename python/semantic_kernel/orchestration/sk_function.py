@@ -17,6 +17,7 @@ from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
 from semantic_kernel.kernel_exception import KernelException
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.memory.null_memory import NullMemory
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
@@ -34,7 +35,6 @@ from semantic_kernel.skill_definition.parameter_view import ParameterView
 from semantic_kernel.skill_definition.read_only_skill_collection_base import (
     ReadOnlySkillCollectionBase,
 )
-from semantic_kernel.utils.null_logger import NullLogger
 
 
 class SKFunction(SKFunctionBase):

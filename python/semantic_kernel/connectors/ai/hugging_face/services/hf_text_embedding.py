@@ -9,7 +9,7 @@ from semantic_kernel.connectors.ai.ai_exception import AIException
 from semantic_kernel.connectors.ai.embeddings.embedding_generator_base import (
     EmbeddingGeneratorBase,
 )
-from semantic_kernel.utils.null_logger import NullLogger
+from semantic_kernel.logging_ import NullLogger
 
 
 class HuggingFaceTextEmbedding(EmbeddingGeneratorBase):

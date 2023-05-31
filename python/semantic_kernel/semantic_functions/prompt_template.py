@@ -3,6 +3,7 @@
 from logging import Logger
 from typing import TYPE_CHECKING, List, Optional
 
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.semantic_functions.prompt_template_base import PromptTemplateBase
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
@@ -13,7 +14,6 @@ from semantic_kernel.template_engine.blocks.var_block import VarBlock
 from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
     PromptTemplatingEngine,
 )
-from semantic_kernel.utils.null_logger import NullLogger
 
 if TYPE_CHECKING:
     from semantic_kernel.orchestration.sk_context import SKContext

@@ -3,10 +3,12 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+import pydantic as pdt
+
 from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 
 
-class SemanticTextMemoryBase(ABC):
+class SemanticTextMemoryBase(pdt.BaseModel, ABC):
     @abstractmethod
     async def save_information_async(
         self,

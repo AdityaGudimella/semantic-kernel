@@ -12,7 +12,7 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
-from semantic_kernel.utils.null_logger import NullLogger
+from semantic_kernel.logging_ import NullLogger
 
 
 class OpenAITextCompletion(TextCompletionClientBase):

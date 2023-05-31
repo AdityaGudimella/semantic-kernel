@@ -4,9 +4,9 @@ from logging import Logger
 
 from pytest import raises
 
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
-from semantic_kernel.utils.null_logger import NullLogger
 
 
 def test_init():

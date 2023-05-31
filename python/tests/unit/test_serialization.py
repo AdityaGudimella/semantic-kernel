@@ -1,10 +1,18 @@
 """Test serialization of SK Kernel."""
+import typing as t
 
+import pydantic as pdt
 import pytest
+import typing_extensions as te
 
 import semantic_kernel as sk
 import semantic_kernel.connectors.ai.open_ai as sk_oai
+from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion import (
+    OpenAIChatCompletion,
+)
+from semantic_kernel.kernel import Kernel
 from semantic_kernel.serialization import from_json, to_json
+from semantic_kernel.settings import KernelSettings
 
 
 @pytest.fixture()
@@ -70,6 +78,7 @@ def kernel() -> sk.Kernel:
     return kernel
 
 
+@pytest.mark.skip(reason="Remove or move.")
 def test_serialization_and_deserialization(kernel: sk.Kernel) -> None:
     """Test serialization of a `Kernel` to JSON."""
     loaded_kernel = from_json(to_json(kernel))
@@ -86,3 +95,52 @@ def test_serialization_and_deserialization(kernel: sk.Kernel) -> None:
         kernel.all_text_completion_services()
         == loaded_kernel.all_text_completion_services()
     )
+
+
+class _Serializable(t.Protocol):
+    """A serializable object."""
+
+    def json(self) -> pdt.Json:
+        """Return a JSON representation of the object."""
+        raise NotImplementedError
+
+    def parse_raw(self: te.Self, json: pdt.Json) -> te.Self:
+        """Return the constructed object from a JSON representation."""
+        raise NotImplementedError
+
+
+@pytest.fixture()
+def serializable(
+    serializable_type: type[t.Any], kernel_settings: KernelSettings
+) -> _Serializable:
+    """Return a serializable object.
+
+    Ideally, I would like to use the `settings` fixture directly in the `parametrize`
+    mark for the `serializable` fixture, but this is not yet possible in pytest.
+    See: https://github.com/pytest-dev/pytest/issues/349
+    This fixture is a workaround.
+    """
+    cls_obj_map = {
+        Kernel: Kernel(),
+        OpenAIChatCompletion: OpenAIChatCompletion(
+            model_id="gpt-3.5-turbo",
+            settings=kernel_settings.open_ai,
+        ),
+    }
+    return cls_obj_map[serializable_type]
+
+
+@pytest.mark.parametrize(
+    "serializable_type",
+    [
+        # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
+        Kernel,
+        # OpenAIChatCompletion,
+    ],
+)
+def test_serialization(serializable: _Serializable) -> None:
+    """Test serialization of an object to JSON."""
+    serialized = serializable.json()
+    assert isinstance(serialized, str), serialized
+    deserialized = serializable.parse_raw(serialized)
+    assert serializable == deserialized

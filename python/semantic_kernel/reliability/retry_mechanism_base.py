@@ -1,13 +1,15 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
 from typing import Awaitable, Callable, TypeVar
+
+import pydantic as pdt
 
 T = TypeVar("T")
 
 
-class RetryMechanismBase(ABC):
+class RetryMechanismBase(pdt.BaseModel, ABC):
     @abstractmethod
     async def execute_with_retry_async(
         self, action: Callable[[], Awaitable[T]], log: logging.Logger

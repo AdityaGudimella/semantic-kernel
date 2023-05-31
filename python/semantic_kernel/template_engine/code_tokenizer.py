@@ -3,13 +3,13 @@
 from logging import Logger
 from typing import List
 
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
 from semantic_kernel.template_engine.blocks.symbols import Symbols
 from semantic_kernel.template_engine.blocks.val_block import ValBlock
 from semantic_kernel.template_engine.blocks.var_block import VarBlock
-from semantic_kernel.utils.null_logger import NullLogger
 
 
 # BNF parsed by CodeTokenizer:
