@@ -19,6 +19,8 @@ from semantic_kernel.utils.settings import (
     openai_settings_from_dot_env,
 )
 
+__version__ = "0.1.0"
+
 __all__ = [
     "Kernel",
     "NullLogger",
