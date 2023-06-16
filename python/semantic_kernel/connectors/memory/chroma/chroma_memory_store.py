@@ -17,11 +17,12 @@ from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 if TYPE_CHECKING:
     import chromadb
     import chromadb.config
+    from chromadb.api import API
     from chromadb.api.models.Collection import Collection
 
 
 class ChromaMemoryStore(MemoryStoreBase):
-    _client: "chromadb.Client"
+    _client: API
     _logger: Logger
 
     def __init__(

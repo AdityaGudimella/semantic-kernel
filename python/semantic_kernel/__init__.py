@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
+from pathlib import Path
 from semantic_kernel import core_skills, memory
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.logging_ import NullLogger, SKLogger
@@ -22,6 +23,9 @@ from semantic_kernel.utils.settings import (
 
 __version__ = "0.2.8.dev"
 
+REPO_ROOT = Path(__file__).parent.parent.parent
+PYTHON_REPO_ROOT = REPO_ROOT / "python"
+
 __all__ = [
     "Kernel",
     "SKLogger",
@@ -40,4 +44,5 @@ __all__ = [
     "from_json",
     "to_json",
     "__version__",
+    "REPO_ROOT",
 ]
