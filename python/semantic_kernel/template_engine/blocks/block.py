@@ -1,31 +1,20 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from typing import Optional, Tuple
 
-from semantic_kernel.logging_ import NullLogger
+import pydantic as pdt
+
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 
 
-class Block:
-    def __init__(
-        self, content: Optional[str] = None, log: Optional[Logger] = NullLogger
-    ) -> None:
-        self._content = content or ""
-        self._log = log or NullLogger()
-        self._type = BlockTypes.UNDEFINED
+class Block(pdt.BaseModel):
+    content: str = ""
+    log: Optional[SKLogger] = pdt.Field(default_factory=NullLogger)
+    type: BlockTypes = BlockTypes.UNDEFINED
 
-    @property
-    def type(self) -> BlockTypes:
-        return self._type
-
-    @property
-    def content(self) -> str:
-        return self._content
-
-    @property
-    def log(self) -> Logger:
-        return self._log
+    class Config:
+        allow_mutation = False
 
     def is_valid(self) -> Tuple[bool, str]:
         raise NotImplementedError("Subclasses must implement this method.")
