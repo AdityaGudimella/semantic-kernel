@@ -5,11 +5,11 @@ from typing import List, Optional
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
-from semantic_kernel.pydantic_ import PydanticABC
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.template_engine.blocks.block import Block
 
 
-class PromptTemplatingEngine(PydanticABC):
+class PromptTemplatingEngine(PydanticField):
     """Prompt templating engine protocol."""
 
     @abc.abstractmethod

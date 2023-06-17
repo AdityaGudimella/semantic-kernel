@@ -21,6 +21,9 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding impor
 )
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.reliability.pass_through_without_retry import (
+    PassThroughWithoutRetry,
+)
 from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
@@ -165,6 +168,7 @@ def serializable(
             template_engine=PromptTemplateEngine(),
             prompt_config=PromptTemplateConfig(),
         ),
+        PassThroughWithoutRetry: PassThroughWithoutRetry(),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
         Block: Block(),
@@ -196,6 +200,7 @@ def serializable(
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,
+        PassThroughWithoutRetry,
         SkillCollection,
         TemplateTokenizer,
     ],
@@ -205,4 +210,10 @@ def test_serialization(serializable: _Serializable) -> None:
     serialized = serializable.json()
     assert isinstance(serialized, str), serialized
     deserialized = serializable.parse_raw(serialized)
-    assert serializable == deserialized
+    try:
+        assert serializable == deserialized
+    except AssertionError:
+        # If your class does not implement any equality checks, we want to ensure that
+        # we're not doing an id comparison and instead check the attributes.
+        if vars(serializable) != vars(deserialized):
+            raise

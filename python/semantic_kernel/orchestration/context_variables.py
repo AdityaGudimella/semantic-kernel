@@ -3,10 +3,10 @@ import collections.abc as cabc
 import json as json_
 import typing as t
 
-from semantic_kernel.pydantic_ import Serializable
+from semantic_kernel.pydantic_ import PydanticField
 
 
-class ContextVariables(cabc.MutableMapping[str, str], Serializable):
+class ContextVariables(cabc.MutableMapping[str, str], PydanticField):
     """Variables that can be used to store and retrieve data.
 
     This class is a MutableMapping subclass, which means it behaves like a dictionary.

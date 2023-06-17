@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import typing_extensions as te
 
-from semantic_kernel.pydantic_ import PydanticABC
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
 )
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from semantic_kernel.skill_definition.functions_view import FunctionsView
 
 
-class SkillCollectionBase(PydanticABC):
+class SkillCollectionBase(PydanticField):
     @property
     @abstractmethod
     def read_only_skill_collection(self: te.Self) -> ReadOnlySkillCollection[te.Self]:
