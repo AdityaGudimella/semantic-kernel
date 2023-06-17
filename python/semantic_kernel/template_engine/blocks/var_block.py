@@ -17,7 +17,7 @@ class VarBlock(Block, TextRenderer):
 
         if len(self.content) < 2:
             err = "The variable name is empty"
-            self.log.error(err)
+            self.logger.error(err)
             self.name = ""
             return
 
@@ -33,17 +33,17 @@ class VarBlock(Block, TextRenderer):
                 f"A variable must start with the symbol {Symbols.VAR_PREFIX} "
                 "and have a name"
             )
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         if self.content[0] != Symbols.VAR_PREFIX:
             error_msg = f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         if len(self.content) < 2:
             error_msg = "The variable name is empty"
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         if not re_match(r"^[a-zA-Z0-9_]*$", self.name):
@@ -51,7 +51,7 @@ class VarBlock(Block, TextRenderer):
                 f"The variable name '{self.name}' contains invalid characters. "
                 "Only alphanumeric chars and underscore are allowed."
             )
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         return True, ""
@@ -62,11 +62,11 @@ class VarBlock(Block, TextRenderer):
 
         if not self.name:
             error_msg = "Variable rendering failed, the variable name is empty"
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             raise ValueError(error_msg)
 
         exists, value = variables.get(self.name)
         if not exists:
-            self.log.warning(f"Variable `{Symbols.VAR_PREFIX}{self.name}` not found")
+            self.logger.warning(f"Variable `{Symbols.VAR_PREFIX}{self.name}` not found")
 
         return value if exists else ""

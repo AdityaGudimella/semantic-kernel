@@ -10,9 +10,9 @@ from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 
 
 def test_init():
-    block = Block(content="test content", log=NullLogger())
+    block = Block(content="test content", logger=NullLogger())
     assert block.content == "test content"
-    assert isinstance(block.log, Logger)
+    assert isinstance(block.logger, Logger)
 
 
 def test_type_property():

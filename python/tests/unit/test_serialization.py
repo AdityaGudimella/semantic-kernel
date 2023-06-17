@@ -7,12 +7,27 @@ import typing_extensions as te
 
 import semantic_kernel as sk
 import semantic_kernel.connectors.ai.open_ai as sk_oai
+from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSettings
+from semantic_kernel.connectors.ai.complete_request_settings import (
+    CompleteRequestSettings,
+)
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion import (
     OpenAIChatCompletion,
 )
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.semantic_functions.prompt_template_config import (
+    PromptTemplateConfig,
+)
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
+from semantic_kernel.template_engine.blocks.block import Block
+from semantic_kernel.template_engine.blocks.code_block import CodeBlock
+from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
+from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
+from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
+    PromptTemplatingEngine,
+)
 
 
 @pytest.fixture()
@@ -124,8 +139,16 @@ def serializable(
         Kernel: Kernel(),
         OpenAIChatCompletion: OpenAIChatCompletion(
             model_id="gpt-3.5-turbo",
-            settings=kernel_settings.open_ai,
+            settings=kernel_settings.openai,
         ),
+        PromptTemplateConfig: PromptTemplateConfig(),
+        Block: Block(),
+        ChatRequestSettings: ChatRequestSettings(),
+        CodeBlock: CodeBlock(),
+        CodeTokenizer: CodeTokenizer(),
+        CodeRenderer: CodeRenderer(),
+        CompleteRequestSettings: CompleteRequestSettings(),
+        ContextVariables: ContextVariables(),
     }
     return cls_obj_map[serializable_type]
 
@@ -134,8 +157,16 @@ def serializable(
     "serializable_type",
     [
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
-        Kernel,
-        # OpenAIChatCompletion,
+        # Kernel,
+        OpenAIChatCompletion,
+        PromptTemplateConfig,
+        Block,
+        ChatRequestSettings,
+        CodeBlock,
+        CodeRenderer,
+        CodeTokenizer,
+        CompleteRequestSettings,
+        ContextVariables,
     ],
 )
 def test_serialization(serializable: _Serializable) -> None:

@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from typing import List
 
-from semantic_kernel.logging_ import NullLogger
+import pydantic as pdt
+
+from semantic_kernel.logging_ import NullLogger, SKLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
@@ -20,16 +22,15 @@ from semantic_kernel.template_engine.blocks.var_block import VarBlock
 # [value]          ::= "'" [text] "'" | '"' [text] '"'
 # [function-call]  ::= [function-id] | [function-id] [parameter]
 # [parameter]      ::= [variable] | [value]
-class CodeTokenizer:
-    def __init__(self, log: Logger = None):
-        self.log = log or NullLogger()
+class CodeTokenizer(SKBaseModel):
+    logger: SKLogger = pdt.Field(default_factory=NullLogger)
 
     def tokenize(self, text: str) -> List[Block]:
         # Remove spaces, which are ignored anyway
         text = text.strip() if text else ""
 
         # Render None/empty to []
-        if not text or text == "":
+        if not text:
             return []
 
         # Track what type of token we're reading
@@ -48,11 +49,11 @@ class CodeTokenizer:
         # 1 char only edge case
         if len(text) == 1:
             if next_char == Symbols.VAR_PREFIX:
-                blocks.append(VarBlock(text, self.log))
+                blocks.append(VarBlock(text, self.logger))
             elif next_char in (Symbols.DBL_QUOTE, Symbols.SGL_QUOTE):
-                blocks.append(ValBlock(text, self.log))
+                blocks.append(ValBlock(text, self.logger))
             else:
-                blocks.append(FunctionIdBlock(text, self.log))
+                blocks.append(FunctionIdBlock(text, self.logger))
 
             return blocks
 
@@ -94,7 +95,7 @@ class CodeTokenizer:
 
                 # When we reach the end of the value, we add the block
                 if current_char == text_value_delimiter:
-                    blocks.append(ValBlock("".join(current_token_content), self.log))
+                    blocks.append(ValBlock("".join(current_token_content), self.logger))
                     current_token_content.clear()
                     current_token_type = None
                     space_separator_found = False
@@ -105,11 +106,11 @@ class CodeTokenizer:
             # Note: there might be multiple consecutive spaces
             if self._is_blank_space(current_char):
                 if current_token_type == BlockTypes.VARIABLE:
-                    blocks.append(VarBlock("".join(current_token_content), self.log))
+                    blocks.append(VarBlock("".join(current_token_content), self.logger))
                     current_token_content.clear()
                 elif current_token_type == BlockTypes.FUNCTION_ID:
                     blocks.append(
-                        FunctionIdBlock("".join(current_token_content), self.log)
+                        FunctionIdBlock("".join(current_token_content), self.logger)
                     )
                     current_token_content.clear()
 
@@ -140,11 +141,11 @@ class CodeTokenizer:
         current_token_content.append(next_char)
 
         if current_token_type == BlockTypes.VALUE:
-            blocks.append(ValBlock("".join(current_token_content), self.log))
+            blocks.append(ValBlock("".join(current_token_content), self.logger))
         elif current_token_type == BlockTypes.VARIABLE:
-            blocks.append(VarBlock("".join(current_token_content), self.log))
+            blocks.append(VarBlock("".join(current_token_content), self.logger))
         elif current_token_type == BlockTypes.FUNCTION_ID:
-            blocks.append(FunctionIdBlock("".join(current_token_content), self.log))
+            blocks.append(FunctionIdBlock("".join(current_token_content), self.logger))
         else:
             raise ValueError("Tokens must be separated by one space least")
 

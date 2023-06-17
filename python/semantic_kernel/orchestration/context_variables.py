@@ -161,8 +161,6 @@ class ContextVariables(cabc.MutableMapping[str, str], Serializable):
         Returns:
             The parsed data.
         """
-        if content_type != "application/json":
-            raise ValueError(f"Invalid content type: {content_type}")
         return cls(**json_.loads(b))
 
     class Encoder(json_.JSONEncoder):

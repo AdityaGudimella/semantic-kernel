@@ -16,7 +16,7 @@ class ValBlock(Block, TextRenderer):
 
         if len(self.content) < 2:
             err = "A value must have single quotes or double quotes on both sides"
-            self.log.error(err)
+            self.logger.error(err)
             self._value = ""
             self._first = "\0"
             self._last = "\0"
@@ -33,14 +33,14 @@ class ValBlock(Block, TextRenderer):
     def is_valid(self) -> Tuple[bool, str]:
         if len(self.content) < 2:
             error_msg = "A value must have single quotes or double quotes on both sides"
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         if self._first != Symbols.DBL_QUOTE and self._first != Symbols.SGL_QUOTE:
             error_msg = (
                 "A value must be wrapped in either single quotes or double quotes"
             )
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         if self._first != self._last:
@@ -48,7 +48,7 @@ class ValBlock(Block, TextRenderer):
                 "A value must be defined using either single quotes or "
                 "double quotes, not both"
             )
-            self.log.error(error_msg)
+            self.logger.error(error_msg)
             return False, error_msg
 
         return True, ""

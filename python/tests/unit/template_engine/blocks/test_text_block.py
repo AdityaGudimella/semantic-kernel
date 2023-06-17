@@ -12,19 +12,19 @@ from semantic_kernel.template_engine.blocks.text_block import TextBlock
 def test_init():
     text_block = TextBlock(text="test text", log=Logger("test_logger"))
     assert text_block.content == "test text"
-    assert isinstance(text_block.log, Logger)
+    assert isinstance(text_block.logger, Logger)
 
 
 def test_init_with_just_start_index():
     text_block = TextBlock(text="test text", start_index=2, log=Logger("test_logger"))
     assert text_block.content == "st text"
-    assert isinstance(text_block.log, Logger)
+    assert isinstance(text_block.logger, Logger)
 
 
 def test_init_with_just_stop_index():
     text_block = TextBlock(text="test text", stop_index=2, log=Logger("test_logger"))
     assert text_block.content == "te"
-    assert isinstance(text_block.log, Logger)
+    assert isinstance(text_block.logger, Logger)
 
 
 def test_init_with_start_index_greater_than_stop_index():
@@ -39,7 +39,7 @@ def test_init_with_start_stop_indices():
         text="test text", start_index=0, stop_index=4, log=Logger("test_logger")
     )
     assert text_block.content == "test"
-    assert isinstance(text_block.log, Logger)
+    assert isinstance(text_block.logger, Logger)
 
 
 def test_init_with_start_index_less_than_zero():

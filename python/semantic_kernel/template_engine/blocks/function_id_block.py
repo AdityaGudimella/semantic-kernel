@@ -16,7 +16,7 @@ class FunctionIdBlock(Block, TextRenderer):
 
         function_name_parts = self.content.split(".")
         if len(function_name_parts) > 2:
-            self.log.error(f"Invalid function name `{self.content}`")
+            self.logger.error(f"Invalid function name `{self.content}`")
             raise ValueError(
                 "A function name can contain at most one dot separating "
                 "the skill name from the function name"

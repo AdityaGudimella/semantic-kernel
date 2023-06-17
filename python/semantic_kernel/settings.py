@@ -66,7 +66,7 @@ class KernelSettings(pdt.BaseSettings):
         DEFAULT_SETTINGS_PATH,
         description="Path to the directory containing the settings file.",
     )
-    open_ai: OpenAISettings
+    openai: OpenAISettings
     logging: LoggerSettings = pdt.Field(
         default_factory=LoggerSettings,
         description="Settings to configure the logging.",

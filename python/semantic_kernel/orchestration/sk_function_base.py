@@ -10,6 +10,7 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
+from semantic_kernel.logging_ import SKLogger
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
@@ -131,7 +132,7 @@ class SKFunctionBase(ABC):
         context: Optional[SKContext] = None,
         memory: Optional[SemanticTextMemoryBase] = None,
         settings: Optional[CompleteRequestSettings] = None,
-        log: Optional[Logger] = None,
+        log: Optional[SKLogger] = None,
     ) -> SKContext:
         """
         Invokes the function with an explicit string input

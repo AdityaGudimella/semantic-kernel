@@ -10,5 +10,5 @@ def test_load_settings() -> None:
     """
     settings = load_settings()
     assert isinstance(settings, KernelSettings)
-    assert settings.open_ai.api_key, "OpenAI API key not set."
+    assert settings.openai.api_key, "OpenAI API key not set."
     assert settings.logging.get_logger("test").level == "DEBUG"

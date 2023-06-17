@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import Optional, Tuple
+from typing import Tuple
 
 import pydantic as pdt
 
@@ -10,7 +10,7 @@ from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 
 class Block(pdt.BaseModel):
     content: str = ""
-    log: Optional[SKLogger] = pdt.Field(default_factory=NullLogger)
+    logger: SKLogger = pdt.Field(default_factory=NullLogger)
     type: BlockTypes = BlockTypes.UNDEFINED
 
     class Config:

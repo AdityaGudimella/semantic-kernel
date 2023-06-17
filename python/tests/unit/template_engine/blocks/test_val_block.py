@@ -10,7 +10,7 @@ from semantic_kernel.template_engine.blocks.val_block import ValBlock
 def test_init():
     val_block = ValBlock(content="'test value'", log=Logger("test_logger"))
     assert val_block.content == "'test value'"
-    assert isinstance(val_block.log, Logger)
+    assert isinstance(val_block.logger, Logger)
 
 
 def test_type_property():

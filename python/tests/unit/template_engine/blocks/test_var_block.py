@@ -13,7 +13,7 @@ from semantic_kernel.template_engine.blocks.var_block import VarBlock
 def test_init():
     var_block = VarBlock(content="$test_var", log=Logger("test_logger"))
     assert var_block.content == "$test_var"
-    assert isinstance(var_block.log, Logger)
+    assert isinstance(var_block.logger, Logger)
 
 
 def test_type_property():

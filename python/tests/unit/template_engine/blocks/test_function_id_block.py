@@ -14,7 +14,7 @@ def test_init():
         content="skill.function", log=Logger("test_logger")
     )
     assert function_id_block.content == "skill.function"
-    assert isinstance(function_id_block.log, Logger)
+    assert isinstance(function_id_block.logger, Logger)
 
 
 def test_type_property():
