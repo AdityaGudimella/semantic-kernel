@@ -18,4 +18,4 @@ class CodeRenderer(Protocol):
         :param context: SK execution context
         :return: Rendered content
         """
-        ...
+        raise NotImplementedError("Subclasses must implement this method.")
