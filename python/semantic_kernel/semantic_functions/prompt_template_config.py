@@ -92,7 +92,7 @@ class PromptTemplateConfig(pdt.BaseModel):
     description: str = ""
     completion: CompletionConfig = pdt.Field(default_factory=CompletionConfig)
     default_services: t.List[str] = pdt.Field(default_factory=list)
-    input: t.Optional[InputConfig] = pdt.Field(default=None)
+    input: InputConfig = pdt.Field(default_factory=InputConfig)
 
     @classmethod
     def from_completion_parameters(

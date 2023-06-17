@@ -5,6 +5,20 @@ import pydantic as pdt
 import typing_extensions as te
 
 
+class PydanticABC(abc.ABC):
+    """An Abstract Base Class that can be used as a pydantic field."""
+
+    @classmethod
+    def __get_validators__(cls) -> t.Iterable[t.Callable]:
+        """Gets the validators for the class."""
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: t.Any) -> t.Any:
+        """Does no validation, just returns the value."""
+        return v
+
+
 class Serializable(abc.ABC):
     """Serialization protocol followed by pydantic `BaseModel`s.
 

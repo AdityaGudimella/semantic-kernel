@@ -1,11 +1,13 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from typing import List, Optional
 
-from semantic_kernel.logging_ import NullLogger
+import pydantic as pdt
+
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.text_block import TextBlock
@@ -17,10 +19,15 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 from semantic_kernel.template_engine.template_tokenizer import TemplateTokenizer
 
 
-class PromptTemplateEngine(PromptTemplatingEngine):
-    def __init__(self, logger: Optional[Logger] = None) -> None:
-        self._logger = logger or NullLogger()
-        self._tokenizer = TemplateTokenizer(self._logger)
+class PromptTemplateEngine(SKBaseModel, PromptTemplatingEngine):
+    logger: SKLogger = pdt.Field(
+        default_factory=NullLogger,
+        description="Logger to use for logging",
+    )
+    tokenizer: TemplateTokenizer = pdt.Field(
+        default_factory=TemplateTokenizer,
+        description="Tokenizer to use for tokenizing",
+    )
 
     def extract_blocks(
         self, template_text: Optional[str] = None, validate: bool = True
@@ -35,8 +42,8 @@ class PromptTemplateEngine(PromptTemplatingEngine):
         :return: A list of all the blocks, ie the template tokenized in
             text, variables and function calls
         """
-        self._logger.debug(f"Extracting blocks from template: {template_text}")
-        blocks = self._tokenizer.tokenize(template_text)
+        self.logger.debug(f"Extracting blocks from template: {template_text}")
+        blocks = self.tokenizer.tokenize(template_text)
 
         if validate:
             for block in blocks:
@@ -56,7 +63,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
         :param context: Access into the current kernel execution context
         :return: The prompt template ready to be used for an AI request
         """
-        self._logger.debug(f"Rendering string template: {template_text}")
+        self.logger.debug(f"Rendering string template: {template_text}")
         blocks = self.extract_blocks(template_text)
         return await self.render_blocks_async(blocks, context)
 
@@ -68,7 +75,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
         :param context: Access into the current kernel execution context
         :return: The prompt template ready to be used for an AI request
         """
-        self._logger.debug(f"Rendering list of {len(blocks)} blocks")
+        self.logger.debug(f"Rendering list of {len(blocks)} blocks")
         rendered_blocks = []
         for block in blocks:
             if isinstance(block, TextRenderer):
@@ -80,10 +87,10 @@ class PromptTemplateEngine(PromptTemplatingEngine):
                     "unexpected block type, the block doesn't have a rendering "
                     "protocol assigned to it"
                 )
-                self._logger.error(error)
+                self.logger.error(error)
                 raise ValueError(error)
 
-        self._logger.debug(f"Rendered prompt: {''.join(rendered_blocks)}")
+        self.logger.debug(f"Rendered prompt: {''.join(rendered_blocks)}")
         return "".join(rendered_blocks)
 
     def render_variables(
@@ -98,7 +105,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
         :return: An updated list of blocks where Variable Blocks have rendered to
             Text Blocks
         """
-        self._logger.debug("Rendering variables")
+        self.logger.debug("Rendering variables")
 
         rendered_blocks = []
         for block in blocks:
@@ -107,7 +114,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
                 continue
             if not isinstance(block, TextRenderer):
                 raise ValueError("TextBlock must implement TextRenderer protocol")
-            rendered_blocks.append(TextBlock(block.render(variables), log=self._logger))
+            rendered_blocks.append(TextBlock(block.render(variables), log=self.logger))
 
         return rendered_blocks
 
@@ -123,7 +130,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
         :return: An updated list of blocks where Code Blocks have rendered to
             Text Blocks
         """
-        self._logger.debug("Rendering code")
+        self.logger.debug("Rendering code")
 
         rendered_blocks = []
         for block in blocks:
@@ -134,7 +141,7 @@ class PromptTemplateEngine(PromptTemplatingEngine):
                 raise ValueError("CodeBlock must implement CodeRenderer protocol")
             rendered_blocks.append(
                 TextBlock(
-                    await block.render_code_async(execution_context), log=self._logger
+                    await block.render_code_async(execution_context), log=self.logger
                 )
             )
 

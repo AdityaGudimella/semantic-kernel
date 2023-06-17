@@ -3,7 +3,10 @@
 from logging import Logger
 from typing import List
 
-from semantic_kernel.logging_ import NullLogger
+import pydantic as pdt
+
+from semantic_kernel.logging_ import NullLogger, SKLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
@@ -20,10 +23,12 @@ from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 #                      | "{{" [function-call] "}}"
 # [text-block]     ::= [any-char] | [any-char] [text-block]
 # [any-char]       ::= any char
-class TemplateTokenizer:
-    def __init__(self, log: Logger = None):
-        self.log = log or NullLogger()
-        self.code_tokenizer = CodeTokenizer(self.log)
+class TemplateTokenizer(SKBaseModel):
+    logger: SKLogger = pdt.Field(default_factory=NullLogger)
+    code_tokenizer: CodeTokenizer = pdt.Field(
+        default_factory=CodeTokenizer,
+        description="The tokenizer used to tokenize code blocks.",
+    )
 
     def tokenize(self, text: str) -> List[Block]:
         # An empty block consists of 4 chars: "{{}}"
@@ -36,11 +41,11 @@ class TemplateTokenizer:
 
         # Render None/empty to ""
         if not text or text == "":
-            return [TextBlock("", log=self.log)]
+            return [TextBlock("", log=self.logger)]
 
         # If the template is "empty" return it as a text block
         if len(text) < MIN_CODE_BLOCK_LENGTH:
-            return [TextBlock(text, log=self.log)]
+            return [TextBlock(text, log=self.logger)]
 
         blocks = []
         end_of_last_block = 0
@@ -103,7 +108,7 @@ class TemplateTokenizer:
                                     text,
                                     end_of_last_block,
                                     block_start_pos,
-                                    log=self.log,
+                                    log=self.logger,
                                 )
                             )
 
@@ -118,7 +123,7 @@ class TemplateTokenizer:
                             # If what is left is empty, consider the raw block
                             # a TextBlock
                             blocks.append(
-                                TextBlock(content_with_delimiters, log=self.log)
+                                TextBlock(content_with_delimiters, log=self.logger)
                             )
                         else:
                             code_blocks = self.code_tokenizer.tokenize(
@@ -154,7 +159,7 @@ class TemplateTokenizer:
                                     CodeBlock(
                                         content_without_delimiters,
                                         code_blocks,
-                                        self.log,
+                                        self.logger,
                                     )
                                 )
                             else:
@@ -168,7 +173,9 @@ class TemplateTokenizer:
 
         # If there is something left after the last block, capture it as a TextBlock
         if end_of_last_block < len(text):
-            blocks.append(TextBlock(text, end_of_last_block, len(text), log=self.log))
+            blocks.append(
+                TextBlock(text, end_of_last_block, len(text), log=self.logger)
+            )
 
         return blocks
 

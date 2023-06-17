@@ -16,8 +16,12 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion impo
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion import (
     OpenAITextCompletion,
 )
+from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding import (
+    OpenAITextEmbedding,
+)
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
 )
@@ -26,7 +30,9 @@ from semantic_kernel.settings import KernelSettings
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
+from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
+from semantic_kernel.template_engine.template_tokenizer import TemplateTokenizer
 
 
 @pytest.fixture()
@@ -57,7 +63,9 @@ def kernel(kernel_settings: KernelSettings) -> sk.Kernel:
     )
 
     prompt_template = sk.PromptTemplate(
-        sk_prompt, kernel.prompt_template_engine, prompt_config
+        template=sk_prompt,
+        template_engine=kernel.prompt_template_engine,
+        prompt_config=prompt_config,
     )
 
     function_config = sk.SemanticFunctionConfig(prompt_config, prompt_template)
@@ -146,7 +154,17 @@ def serializable(
         OpenAIChatCompletion: OpenAIChatCompletion(
             model_id="gpt-3.5-turbo", settings=kernel_settings.openai
         ),
+        OpenAITextEmbedding: OpenAITextEmbedding(
+            model_id="text-embedding-ada-002", settings=kernel_settings.openai
+        ),
         PromptTemplateConfig: PromptTemplateConfig(),
+        PromptTemplateEngine: PromptTemplateEngine(),
+        PromptTemplate: PromptTemplate(
+            template="",
+            template_engine=PromptTemplateEngine(),
+            prompt_config=PromptTemplateConfig(),
+        ),
+        TemplateTokenizer: TemplateTokenizer(),
         Block: Block(),
         ChatRequestSettings: ChatRequestSettings(),
         CodeBlock: CodeBlock(),
@@ -163,9 +181,6 @@ def serializable(
     [
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
         # Kernel,
-        OpenAIChatCompletion,
-        OpenAITextCompletion,
-        PromptTemplateConfig,
         Block,
         ChatRequestSettings,
         CodeBlock,
@@ -173,6 +188,13 @@ def serializable(
         CodeTokenizer,
         CompleteRequestSettings,
         ContextVariables,
+        OpenAIChatCompletion,
+        OpenAITextCompletion,
+        OpenAITextEmbedding,
+        PromptTemplateConfig,
+        PromptTemplateEngine,
+        PromptTemplate,
+        TemplateTokenizer,
     ],
 )
 def test_serialization(serializable: _Serializable) -> None:

@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
-from semantic_kernel.logging_ import NullLogger
+import pydantic as pdt
+
+from semantic_kernel.logging_ import NullLogger, SKLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.semantic_functions.prompt_template_base import PromptTemplateBase
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
@@ -19,29 +21,26 @@ if TYPE_CHECKING:
     from semantic_kernel.orchestration.sk_context import SKContext
 
 
-class PromptTemplate(PromptTemplateBase):
-    _template: str
-    _template_engine: PromptTemplatingEngine
-    _log: Logger
-    _prompt_config: PromptTemplateConfig
-
-    def __init__(
-        self,
-        template: str,
-        template_engine: PromptTemplatingEngine,
-        prompt_config: PromptTemplateConfig,
-        log: Optional[Logger] = None,
-    ) -> None:
-        self._template = template
-        self._template_engine = template_engine
-        self._prompt_config = prompt_config
-        self._log = log if log is not None else NullLogger()
+class PromptTemplate(SKBaseModel, PromptTemplateBase):
+    template: str = pdt.Field(
+        description="Prompt template to render",
+    )
+    template_engine: PromptTemplatingEngine = pdt.Field(
+        description="Template engine to use for rendering",
+    )
+    prompt_config: PromptTemplateConfig = pdt.Field(
+        description="Prompt configuration",
+    )
+    logger: SKLogger = pdt.Field(
+        default_factory=NullLogger,
+        description="Logger to use for logging",
+    )
 
     def get_parameters(self) -> List[ParameterView]:
         seen = set()
 
         result = []
-        for param in self._prompt_config.input.parameters:
+        for param in self.prompt_config.input.parameters:
             if param is None:
                 continue
 
@@ -51,7 +50,7 @@ class PromptTemplate(PromptTemplateBase):
 
             seen.add(param.name)
 
-        blocks = self._template_engine.extract_blocks(self._template)
+        blocks = self.template_engine.extract_blocks(self.template)
         for block in blocks:
             if block.type != BlockTypes.VARIABLE:
                 continue
@@ -69,4 +68,4 @@ class PromptTemplate(PromptTemplateBase):
         return result
 
     async def render_async(self, context: "SKContext") -> str:
-        return await self._template_engine.render_async(self._template, context)
+        return await self.template_engine.render_async(self.template, context)

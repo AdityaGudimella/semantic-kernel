@@ -45,7 +45,7 @@ class ChatPromptTemplate(PromptTemplate):
 
     def add_message(self, role: str, message: str) -> None:
         self._messages.append(
-            (role, PromptTemplate(message, self._template_engine, self._prompt_config))
+            (role, PromptTemplate(message, self.template_engine, self.prompt_config))
         )
 
     async def render_messages_async(
@@ -55,8 +55,8 @@ class ChatPromptTemplate(PromptTemplate):
         for role, message in self._messages:
             rendered_messages.append((role, await message.render_async(context)))
 
-        latest_user_message = await self._template_engine.render_async(
-            self._template, context
+        latest_user_message = await self.template_engine.render_async(
+            self.template, context
         )
         rendered_messages.append(("user", latest_user_message))
 

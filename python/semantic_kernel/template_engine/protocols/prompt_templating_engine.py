@@ -3,17 +3,14 @@
 import abc
 from typing import List, Optional
 
-import pydantic as pdt
-
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticABC
 from semantic_kernel.template_engine.blocks.block import Block
 
 
-class PromptTemplatingEngine(pdt.BaseModel, abc.ABC):
-    """
-    Prompt templating engine protocol.
-    """
+class PromptTemplatingEngine(PydanticABC):
+    """Prompt templating engine protocol."""
 
     @abc.abstractmethod
     def extract_blocks(
