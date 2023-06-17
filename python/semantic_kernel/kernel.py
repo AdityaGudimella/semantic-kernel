@@ -180,14 +180,12 @@ class Kernel(pdt.BaseModel):
         if input_context is not None:
             context = input_context
             if input_vars is not None:
-                context._variables = input_vars.merge_or_overwrite(
-                    new_vars=context._variables, overwrite=False
+                context.variables = ContextVariables(
+                    **{**input_vars, **context.variables}
                 )
 
             if input_str is not None:
-                context._variables = ContextVariables(input_str).merge_or_overwrite(
-                    new_vars=context._variables, overwrite=False
-                )
+                context.variables = ContextVariables(input_str, **context._variables)
 
         # if the user did not pass in a context, prioritize an input string, and merge that with input context variables
         else:
@@ -197,9 +195,7 @@ class Kernel(pdt.BaseModel):
                 variables = input_vars
             elif input_str is not None and input_vars is not None:
                 variables = ContextVariables(input_str)
-                variables = variables.merge_or_overwrite(
-                    new_vars=input_vars, overwrite=False
-                )
+                variables.update(input_vars)
             else:
                 variables = ContextVariables()
             context = SKContext(

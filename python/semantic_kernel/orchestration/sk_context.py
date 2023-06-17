@@ -111,6 +111,11 @@ class SKContext:
         """
         return self._variables
 
+    @variables.setter
+    def variables(self, value: ContextVariables) -> None:
+        """Set the value of variables."""
+        self._variables = value
+
     @property
     def memory(self) -> SemanticTextMemoryBase:
         """

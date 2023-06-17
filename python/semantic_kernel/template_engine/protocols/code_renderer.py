@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import Protocol, runtime_checkable
+import pydantic as pdt
 
 from semantic_kernel.orchestration.sk_context import SKContext
 
 
-@runtime_checkable
-class CodeRenderer(Protocol):
+class CodeRenderer(pdt.BaseModel):
     """
     Protocol for dynamic code blocks that need async IO to be rendered.
     """

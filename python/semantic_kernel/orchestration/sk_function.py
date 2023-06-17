@@ -287,9 +287,7 @@ class SKFunction(SKFunctionBase):
         else:
             # If context is passed, we need to merge the variables
             if variables is not None:
-                context._variables = variables.merge_or_overwrite(
-                    new_vars=context._variables, overwrite=False
-                )
+                context.variables.update(variables)
             if memory is not None:
                 context._memory = memory
 
@@ -333,9 +331,7 @@ class SKFunction(SKFunctionBase):
         else:
             # If context is passed, we need to merge the variables
             if variables is not None:
-                context._variables = variables.merge_or_overwrite(
-                    new_vars=context._variables, overwrite=False
-                )
+                context.variables.update(variables)
             if memory is not None:
                 context._memory = memory
 
@@ -371,7 +367,7 @@ class SKFunction(SKFunctionBase):
             self._ai_service if self._ai_service is not None else self._chat_service
         )
         new_context = await self._function(service, settings, context)
-        context.variables.merge_or_overwrite(new_context.variables)
+        context.variables.update(new_context.variables)
         return context
 
     async def _invoke_native_async(self, context):

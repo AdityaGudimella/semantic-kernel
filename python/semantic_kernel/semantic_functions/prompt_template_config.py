@@ -87,7 +87,7 @@ class InputConfig(pdt.BaseModel):
 
 
 class PromptTemplateConfig(pdt.BaseModel):
-    schema: int = 1
+    schema_: int = 1
     type: str = "completion"
     description: str = ""
     completion: CompletionConfig = pdt.Field(default_factory=CompletionConfig)

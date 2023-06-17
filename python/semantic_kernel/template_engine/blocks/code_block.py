@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
+import copy
 from logging import Logger
 from typing import List, Optional, Tuple
 
@@ -89,7 +90,7 @@ class CodeBlock(Block, CodeRenderer):
             self.log.error(error_msg)
             raise ValueError(error_msg)
 
-        variables_clone = context.variables.clone()
+        variables_clone = copy.copy(context.variables)
 
         if len(self._tokens) > 1:
             self.log.debug(f"Passing variable/value: `{self._tokens[1].content}`")
