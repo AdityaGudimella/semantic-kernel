@@ -569,8 +569,8 @@ class Kernel(pdt.BaseModel):
         function = SKFunction.from_semantic_config(
             skill_name, function_name, function_config
         )
-        function.request_settings.update_from_completion_config(
-            function_config.prompt_template_config.completion
+        function.request_settings.update(
+            **function_config.prompt_template_config.completion.dict()
         )
 
         # Connect the function to the current kernel skill
@@ -587,8 +587,8 @@ class Kernel(pdt.BaseModel):
             )
 
             function.set_chat_configuration(
-                ChatRequestSettings.from_completion_config(
-                    function_config.prompt_template_config.completion
+                ChatRequestSettings(
+                    **function_config.prompt_template_config.completion.dict()
                 )
             )
 
@@ -610,8 +610,8 @@ class Kernel(pdt.BaseModel):
             )
 
             function.set_ai_configuration(
-                CompleteRequestSettings.from_completion_config(
-                    function_config.prompt_template_config.completion
+                CompleteRequestSettings(
+                    **function_config.prompt_template_config.completion.dict()
                 )
             )
 

@@ -55,6 +55,10 @@ class CompletionConfig(pdt.BaseModel):
         ),
     )
 
+    def update(self, **kwargs: t.Any) -> None:
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
 
 class InputParameter(pdt.BaseModel):
     name: str = pdt.Field(..., description="The name of the input parameter.")
