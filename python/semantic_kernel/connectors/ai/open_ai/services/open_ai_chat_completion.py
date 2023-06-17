@@ -30,7 +30,7 @@ class OpenAIChatCompletion(
     settings: OpenAISettings = pdt.Field(
         description="OpenAI settings. See: semantic_kernel.settings.OpenAISettings"
     )
-    _logger: Logger = pdt.PrivateAttr(NullLogger())
+    _logger: Logger = pdt.PrivateAttr(default_factory=NullLogger)
     _messages: List[Tuple[str, str]] = pdt.PrivateAttr([])
 
     async def complete_chat_async(

@@ -44,6 +44,12 @@ class OpenAISettings(pdt.BaseSettings):
         description="OpenAI API endpoint. See: ?",
     )
 
+    class Config:
+        """Pydantic configuration."""
+
+        # One shouldn't be able to modify the settings once they're loaded.
+        allow_mutation = False
+
 
 class KernelSettings(pdt.BaseSettings):
     """Settings to configure a semantic kernel `Kernel` object.

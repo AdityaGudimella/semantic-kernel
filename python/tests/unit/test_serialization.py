@@ -6,13 +6,15 @@ import pytest
 import typing_extensions as te
 
 import semantic_kernel as sk
-import semantic_kernel.connectors.ai.open_ai as sk_oai
 from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSettings
 from semantic_kernel.connectors.ai.complete_request_settings import (
     CompleteRequestSettings,
 )
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion import (
     OpenAIChatCompletion,
+)
+from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion import (
+    OpenAITextCompletion,
 )
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.orchestration.context_variables import ContextVariables
@@ -25,13 +27,10 @@ from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
-from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
-    PromptTemplatingEngine,
-)
 
 
 @pytest.fixture()
-def kernel() -> sk.Kernel:
+def kernel(kernel_settings: KernelSettings) -> sk.Kernel:
     """Return a `Kernel`."""
     sk_prompt = """
     ChatBot can have a conversation with you about any topic.
@@ -47,7 +46,10 @@ def kernel() -> sk.Kernel:
 
     api_key, org_id = sk.openai_settings_from_dot_env()
     kernel.add_text_completion_service(
-        "davinci-003", sk_oai.OpenAITextCompletion("text-davinci-003", api_key, org_id)
+        "davinci-003",
+        OpenAITextCompletion(
+            model_id="text-davinci-003", settings=kernel_settings.openai
+        ),
     )
 
     prompt_config = sk.PromptTemplateConfig.from_completion_parameters(
@@ -71,7 +73,8 @@ def kernel() -> sk.Kernel:
     """
 
     kernel.add_chat_service(
-        "chat-gpt", sk_oai.OpenAIChatCompletion("gpt-3.5-turbo", api_key, org_id)
+        "chat-gpt",
+        OpenAIChatCompletion(model_id="gpt-3.5-turbo", settings=kernel_settings.openai),
     )
 
     prompt_config = sk.PromptTemplateConfig.from_completion_parameters(
@@ -137,9 +140,11 @@ def serializable(
     """
     cls_obj_map = {
         Kernel: Kernel(),
+        OpenAITextCompletion: OpenAITextCompletion(
+            model_id="text-davinci-003", settings=kernel_settings.openai
+        ),
         OpenAIChatCompletion: OpenAIChatCompletion(
-            model_id="gpt-3.5-turbo",
-            settings=kernel_settings.openai,
+            model_id="gpt-3.5-turbo", settings=kernel_settings.openai
         ),
         PromptTemplateConfig: PromptTemplateConfig(),
         Block: Block(),
@@ -159,6 +164,7 @@ def serializable(
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
         # Kernel,
         OpenAIChatCompletion,
+        OpenAITextCompletion,
         PromptTemplateConfig,
         Block,
         ChatRequestSettings,
