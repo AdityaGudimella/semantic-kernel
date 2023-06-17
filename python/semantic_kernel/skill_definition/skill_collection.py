@@ -1,10 +1,13 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Tuple
+
+import pydantic as pdt
+from typing_extensions import Self
 
 from semantic_kernel.kernel_exception import KernelException
-from semantic_kernel.logging_ import NullLogger
+from semantic_kernel.logging_ import NullLogger, SKLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
@@ -14,24 +17,24 @@ from semantic_kernel.utils.static_property import static_property
 
 if TYPE_CHECKING:
     from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
-    from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-        ReadOnlySkillCollectionBase,
+
+
+class SkillCollection(SKBaseModel, SkillCollectionBase):
+    _skill_collection: Dict[str, Dict[str, "SKFunctionBase"]] = pdt.Field(
+        alias="skill_collection", default_factory=dict
     )
+    _read_only_skill_collection: "ReadOnlySkillCollection[Self]" = pdt.PrivateAttr()
+    _logger: SKLogger = pdt.PrivateAttr(default_factory=NullLogger)
 
-
-class SkillCollection(SkillCollectionBase):
-    _skill_collection: Dict[str, Dict[str, "SKFunctionBase"]]
-    _read_only_skill_collection: "ReadOnlySkillCollectionBase"
-    _log: Logger
+    def __init__(self: Self, **kwags: Any) -> None:
+        super().__init__(**kwags)
+        self._read_only_skill_collection = ReadOnlySkillCollection(self)
 
     @property
-    def read_only_skill_collection(self) -> "ReadOnlySkillCollectionBase":
+    def read_only_skill_collection(
+        self: Self,
+    ) -> "ReadOnlySkillCollection[Self]":
         return self._read_only_skill_collection
-
-    def __init__(self, log: Optional[Logger] = None) -> None:
-        self._log = log if log is not None else NullLogger()
-        self._read_only_skill_collection = ReadOnlySkillCollection(self)
-        self._skill_collection = {}
 
     def add_semantic_function(self, function: "SKFunctionBase") -> None:
         if function is None:
@@ -86,7 +89,7 @@ class SkillCollection(SkillCollectionBase):
         if self.has_semantic_function(s_name, f_name):
             return self._skill_collection[s_name][f_name]
 
-        self._log.error(f"Function not available: {s_name}.{f_name}")
+        self._logger.error(f"Function not available: {s_name}.{f_name}")
         raise KernelException(
             KernelException.ErrorCodes.FunctionNotAvailable,
             f"Function not available: {s_name}.{f_name}",
@@ -99,7 +102,7 @@ class SkillCollection(SkillCollectionBase):
         if self.has_native_function(s_name, f_name):
             return self._skill_collection[s_name][f_name]
 
-        self._log.error(f"Function not available: {s_name}.{f_name}")
+        self._logger.error(f"Function not available: {s_name}.{f_name}")
         raise KernelException(
             KernelException.ErrorCodes.FunctionNotAvailable,
             f"Function not available: {s_name}.{f_name}",
@@ -126,7 +129,7 @@ class SkillCollection(SkillCollectionBase):
         if self.has_function(s_name, f_name):
             return self._skill_collection[s_name][f_name]
 
-        self._log.error(f"Function not available: {s_name}.{f_name}")
+        self._logger.error(f"Function not available: {s_name}.{f_name}")
         raise KernelException(
             KernelException.ErrorCodes.FunctionNotAvailable,
             f"Function not available: {s_name}.{f_name}",

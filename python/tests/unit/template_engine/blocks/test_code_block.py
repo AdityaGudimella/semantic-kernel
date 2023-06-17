@@ -8,9 +8,7 @@ from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.delegate_types import DelegateTypes
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function import SKFunction
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
-)
+from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
@@ -20,7 +18,7 @@ from semantic_kernel.template_engine.blocks.var_block import VarBlock
 
 class TestCodeBlock:
     def setup_method(self):
-        self.skills = Mock(spec=ReadOnlySkillCollectionBase)
+        self.skills = Mock(spec=SkillCollectionBase)
         self.log = Mock(spec=Logger)
 
     @mark.asyncio
@@ -33,7 +31,7 @@ class TestCodeBlock:
         )
         # Make it so our self.skills mock's `has_function` method returns False
         self.skills.has_function.return_value = False
-        target = CodeBlock(content="functionName", log=self.log)
+        target = CodeBlock(content="functionName", logger=self.log)
 
         with raises(ValueError):
             await target.render_code_async(context)
@@ -63,16 +61,16 @@ class TestCodeBlock:
         self.skills.has_function.return_value = True
         self.skills.get_function.return_value = function
 
-        target = CodeBlock(content="functionName", log=self.log)
+        target = CodeBlock(content="functionName", logger=self.log)
 
         with raises(ValueError):
             await target.render_code_async(context)
 
     def test_it_has_the_correct_type(self):
-        assert CodeBlock(content="", log=self.log).type == BlockTypes.CODE
+        assert CodeBlock(content="", logger=self.log).type == BlockTypes.CODE
 
     def test_it_trims_spaces(self):
-        assert CodeBlock(content="  aa  ", log=self.log).content == "aa"
+        assert CodeBlock(content="  aa  ", logger=self.log).content == "aa"
 
     def test_it_checks_validity_of_internal_blocks(self):
         valid_block1 = FunctionIdBlock(content="x")
@@ -81,10 +79,10 @@ class TestCodeBlock:
         invalid_block = VarBlock(content="!notvalid")
 
         code_block1 = CodeBlock(
-            tokens=[valid_block1, valid_block2], content="", log=self.log
+            tokens=[valid_block1, valid_block2], content="", logger=self.log
         )
         code_block2 = CodeBlock(
-            tokens=[valid_block1, invalid_block], content="", log=self.log
+            tokens=[valid_block1, invalid_block], content="", logger=self.log
         )
 
         is_valid1, _ = code_block1.is_valid()
@@ -99,11 +97,15 @@ class TestCodeBlock:
         val_block = ValBlock(content="'value'")
         var_block = VarBlock(content="$var")
 
-        code_block1 = CodeBlock(tokens=[func_id, val_block], content="", log=self.log)
-        code_block2 = CodeBlock(tokens=[func_id, var_block], content="", log=self.log)
-        code_block3 = CodeBlock(tokens=[func_id, func_id], content="", log=self.log)
+        code_block1 = CodeBlock(
+            tokens=[func_id, val_block], content="", logger=self.log
+        )
+        code_block2 = CodeBlock(
+            tokens=[func_id, var_block], content="", logger=self.log
+        )
+        code_block3 = CodeBlock(tokens=[func_id, func_id], content="", logger=self.log)
         code_block4 = CodeBlock(
-            tokens=[func_id, var_block, var_block], content="", log=self.log
+            tokens=[func_id, var_block, var_block], content="", logger=self.log
         )
 
         is_valid1, _ = code_block1.is_valid()
@@ -127,7 +129,7 @@ class TestCodeBlock:
             variables, memory=NullMemory(), skill_collection=None, logger=self.log
         )
 
-        code_block = CodeBlock(content="$varName", log=self.log)
+        code_block = CodeBlock(content="$varName", logger=self.log)
         result = await code_block.render_code_async(context)
 
         assert result == "foo"
@@ -142,7 +144,7 @@ class TestCodeBlock:
         )
 
         code_block = CodeBlock(
-            tokens=[VarBlock(content="$varName")], content="", log=self.log
+            tokens=[VarBlock(content="$varName")], content="", logger=self.log
         )
         result = await code_block.render_code_async(context)
 
@@ -157,7 +159,7 @@ class TestCodeBlock:
             logger=self.log,
         )
 
-        code_block = CodeBlock(content="'ciao'", log=self.log)
+        code_block = CodeBlock(content="'ciao'", logger=self.log)
         result = await code_block.render_code_async(context)
 
         assert result == "ciao"
@@ -172,7 +174,7 @@ class TestCodeBlock:
         )
 
         code_block = CodeBlock(
-            tokens=[ValBlock(content="'arrivederci'")], content="", log=self.log
+            tokens=[ValBlock(content="'arrivederci'")], content="", logger=self.log
         )
         result = await code_block.render_code_async(context)
 
@@ -228,7 +230,7 @@ class TestCodeBlock:
         self.skills.get_function.return_value = function
 
         # Create a CodeBlock with the FunctionIdBlock and render it with the context
-        code_block = CodeBlock(tokens=[func_id], content="", log=self.log)
+        code_block = CodeBlock(tokens=[func_id], content="", logger=self.log)
         await code_block.render_code_async(context)
 
         # Check that the canary values match the original context variables
@@ -289,7 +291,7 @@ class TestCodeBlock:
 
         # Create a CodeBlock with the FunctionIdBlock and VarBlock,
         # and render it with the context
-        code_block = CodeBlock(tokens=[func_id, var_block], content="", log=self.log)
+        code_block = CodeBlock(tokens=[func_id, var_block], content="", logger=self.log)
         result = await code_block.render_code_async(context)
 
         # Check that the result matches the custom variable value
@@ -339,7 +341,7 @@ class TestCodeBlock:
 
         # Create a CodeBlock with the FunctionIdBlock and ValBlock,
         # and render it with the context
-        code_block = CodeBlock(tokens=[func_id, val_block], content="", log=self.log)
+        code_block = CodeBlock(tokens=[func_id, val_block], content="", logger=self.log)
         result = await code_block.render_code_async(context)
 
         # Check that the result matches the value

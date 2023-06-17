@@ -6,8 +6,9 @@ from typing import Any, List, Optional, Tuple
 import pydantic as pdt
 
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
+from semantic_kernel.skill_definition.read_only_skill_collection import (
+    ReadOnlySkillCollection,
+    SkillCollectionsT,
 )
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
@@ -131,7 +132,7 @@ class CodeBlock(Block, CodeRenderer):
         return result.result
 
     def _get_function_from_skill_collection(
-        self, skills: ReadOnlySkillCollectionBase, f_block: FunctionIdBlock
+        self, skills: ReadOnlySkillCollection[SkillCollectionsT], f_block: FunctionIdBlock
     ) -> Optional[SKFunctionBase]:
         if not f_block.skill_name and skills.has_function(None, f_block.function_name):
             return skills.get_function(None, f_block.function_name)

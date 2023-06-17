@@ -27,6 +27,7 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 )
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
+from semantic_kernel.skill_definition.skill_collection import SkillCollection
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
@@ -164,6 +165,7 @@ def serializable(
             template_engine=PromptTemplateEngine(),
             prompt_config=PromptTemplateConfig(),
         ),
+        SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
         Block: Block(),
         ChatRequestSettings: ChatRequestSettings(),
@@ -194,6 +196,7 @@ def serializable(
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,
+        SkillCollection,
         TemplateTokenizer,
     ],
 )

@@ -4,7 +4,7 @@ import glob
 import importlib
 import inspect
 import os
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar, Union
 from uuid import uuid4
 
 import pydantic as pdt
@@ -33,19 +33,22 @@ from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function import SKFunction
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
+from semantic_kernel.pydantic_ import SKGenericModel
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
 from semantic_kernel.reliability.retry_mechanism_base import RetryMechanismBase
 from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
 from semantic_kernel.semantic_functions.prompt_template_config import (
+    CompletionConfig,
     PromptTemplateConfig,
 )
 from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
+from semantic_kernel.skill_definition.read_only_skill_collection import (
+    ReadOnlySkillCollection,
+    SkillCollectionsT,
 )
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
 from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
@@ -103,12 +106,12 @@ class DefaultServices(pdt.BaseModel):
     )
 
 
-class Kernel(pdt.BaseModel):
+class Kernel(SKGenericModel, Generic[SkillCollectionsT]):
     logger: SKLogger = pdt.Field(
         default_factory=NullLogger,
         description="The logger that is used by the kernel.",
     )
-    skill_collection: SkillCollectionBase = pdt.Field(
+    skill_collection: SkillCollectionsT = pdt.Field(
         default=None,
         description="The skill collection that contains all the skills that are loaded into the kernel.",  # noqa: E501
     )
@@ -137,16 +140,18 @@ class Kernel(pdt.BaseModel):
     def skill_collection_validator(cls, v: Any, **kwargs) -> SkillCollectionBase:
         """Validate the skill collection."""
         assert kwargs.get("logger") is not None
-        return SkillCollection(kwargs["logger"]) if v is None else v
+        return SkillCollection(logger=kwargs["logger"]) if v is None else v
 
     @pdt.validator("prompt_template_engine", pre=True)
-    def prompt_template_engine_validator(cls, v: Any, **kwargs) -> PromptTemplateEngine:
+    def prompt_template_engine_validator(
+        cls, v: Any, **kwargs: Any
+    ) -> PromptTemplateEngine:
         """Validate the skill collection."""
         assert kwargs.get("logger") is not None
-        return PromptTemplateEngine(kwargs["logger"]) if v is None else v
+        return PromptTemplateEngine(logger=kwargs["logger"]) if v is None else v
 
     @property
-    def skills(self) -> ReadOnlySkillCollectionBase:
+    def skills(self) -> ReadOnlySkillCollection[SkillCollection]:
         return self.skill_collection.read_only_skill_collection
 
     def register_semantic_function(
@@ -737,14 +742,14 @@ class Kernel(pdt.BaseModel):
                 else "Generic function, unknown purpose"
             ),
             type="completion",
-            completion=PromptTemplateConfig.CompletionConfig(
-                temperature,
-                top_p,
-                presence_penalty,
-                frequency_penalty,
-                max_tokens,
-                number_of_responses,
-                stop_sequences if stop_sequences is not None else [],
+            completion=CompletionConfig(
+                temperature=temperature,
+                top_p=top_p,
+                presence_penalty=presence_penalty,
+                frequency_penalty=frequency_penalty,
+                max_tokens=max_tokens,
+                number_of_responses=number_of_responses,
+                stop_sequences=stop_sequences if stop_sequences is not None else [],
             ),
         )
 
@@ -752,7 +757,11 @@ class Kernel(pdt.BaseModel):
         if skill_name is not None:
             validate_skill_name(skill_name)
 
-        template = PromptTemplate(prompt_template, self.prompt_template_engine, config)
+        template = PromptTemplate(
+            template=prompt_template,
+            template_engine=self.prompt_template_engine,
+            prompt_config=config,
+        )
         function_config = SemanticFunctionConfig(config, template)
 
         return self.register_semantic_function(

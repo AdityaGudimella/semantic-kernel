@@ -1,17 +1,18 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from logging import Logger
-from typing import Any, Literal, Optional, Tuple, Union
+from typing import Any, Generic, Literal, Optional, Tuple, Union
 
 from semantic_kernel.kernel_exception import KernelException
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
+from semantic_kernel.skill_definition.read_only_skill_collection import (
+    ReadOnlySkillCollection,
+    SkillCollectionsT,
 )
 
 
-class SKContext:
+class SKContext(Generic[SkillCollectionsT]):
     """Semantic Kernel context."""
 
     _error_occurred: bool = False
@@ -19,14 +20,14 @@ class SKContext:
     _last_error_description: str = ""
     _logger: Logger
     _memory: SemanticTextMemoryBase
-    _skill_collection: ReadOnlySkillCollectionBase
+    _skill_collection: ReadOnlySkillCollection[SkillCollectionsT]
     _variables: ContextVariables
 
     def __init__(
         self,
         variables: ContextVariables,
         memory: SemanticTextMemoryBase,
-        skill_collection: ReadOnlySkillCollectionBase,
+        skill_collection: ReadOnlySkillCollection[SkillCollectionsT],
         logger: Logger,
         # TODO: cancellation token?
     ) -> None:
@@ -36,7 +37,7 @@ class SKContext:
         Arguments:
             variables {ContextVariables} -- The context variables.
             memory {SemanticTextMemoryBase} -- The semantic text memory.
-            skill_collection {ReadOnlySkillCollectionBase} -- The skill collection.
+            skill_collection {ReadOnlySkillCollection} -- The skill collection.
             logger {Logger} -- The logger.
         """
         self._variables = variables
@@ -127,17 +128,17 @@ class SKContext:
         return self._memory
 
     @property
-    def skills(self) -> ReadOnlySkillCollectionBase:
+    def skills(self) -> ReadOnlySkillCollection[SkillCollectionsT]:
         """
         Read only skills collection.
 
         Returns:
-            ReadOnlySkillCollectionBase -- The skills collection.
+            ReadOnlySkillCollection[SkillCollectionsT] -- The skills collection.
         """
         return self._skill_collection
 
     @skills.setter
-    def skills(self, value: ReadOnlySkillCollectionBase) -> None:
+    def skills(self, value: ReadOnlySkillCollection[SkillCollectionsT]) -> None:
         """
         Set the value of skills collection
         """

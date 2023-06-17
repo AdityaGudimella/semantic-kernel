@@ -3,6 +3,7 @@ import typing as t
 
 import pydantic as pdt
 import typing_extensions as te
+from pydantic.generics import GenericModel
 
 
 class PydanticABC(abc.ABC):
@@ -40,12 +41,24 @@ class Serializable(abc.ABC):
         raise NotImplementedError("Subclasses must implement this method.")
 
 
+_JSON_ENCODERS: t.Final[t.Dict[t.Type[t.Any], t.Callable[[t.Any], str]]] = {
+    Serializable: lambda v: v.json(),
+}
+
+
 class SKBaseModel(pdt.BaseModel):
     """Base class for all pydantic models in the SK."""
 
     class Config:
-        """Base configuration for all pydantic models in the SK."""
+        """Pydantic configuration."""
 
-        json_encoders: t.Dict[t.Type[t.Any], t.Callable[[t.Any], t.Any]] = {
-            Serializable: lambda v: v.json(),
-        }
+        json_encoders = _JSON_ENCODERS
+
+
+class SKGenericModel(GenericModel):
+    """Base class for all pydantic `GenericModel`s in the SK."""
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_encoders = _JSON_ENCODERS

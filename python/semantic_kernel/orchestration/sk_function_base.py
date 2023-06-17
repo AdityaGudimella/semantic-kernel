@@ -17,8 +17,9 @@ from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.skill_definition.function_view import FunctionView
 
 if TYPE_CHECKING:
-    from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-        ReadOnlySkillCollectionBase,
+    from semantic_kernel.skill_definition.read_only_skill_collection import (
+        ReadOnlySkillCollection,
+        SkillCollectionsT,
     )
 
 
@@ -152,7 +153,7 @@ class SKFunctionBase(ABC):
     @abstractmethod
     def set_default_skill_collection(
         self,
-        skills: "ReadOnlySkillCollectionBase",
+        skills: "ReadOnlySkillCollection[SkillCollectionsT]",
     ) -> "SKFunctionBase":
         """
         Sets the skill collection to use when the function is
@@ -160,7 +161,7 @@ class SKFunctionBase(ABC):
         a skill collection
 
         Arguments:
-            skills {ReadOnlySkillCollectionBase} -- Kernel's skill collection
+            skills {ReadOnlySkillCollection[SkillCollectionsT]} -- Kernel's skill collection
 
         Returns:
             SKFunctionBase -- The function instance

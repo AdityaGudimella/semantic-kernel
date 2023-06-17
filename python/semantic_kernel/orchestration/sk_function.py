@@ -4,7 +4,7 @@ import asyncio
 import threading
 from enum import Enum
 from logging import Logger
-from typing import Any, Callable, List, Optional, cast
+from typing import Any, Callable, Generic, List, Optional, cast
 
 from semantic_kernel.connectors.ai.chat_completion_client_base import (
     ChatCompletionClientBase,
@@ -32,12 +32,13 @@ from semantic_kernel.semantic_functions.semantic_function_config import (
 )
 from semantic_kernel.skill_definition.function_view import FunctionView
 from semantic_kernel.skill_definition.parameter_view import ParameterView
-from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-    ReadOnlySkillCollectionBase,
+from semantic_kernel.skill_definition.read_only_skill_collection import (
+    ReadOnlySkillCollection,
+    SkillCollectionsT,
 )
 
 
-class SKFunction(SKFunctionBase):
+class SKFunction(SKFunctionBase, Generic[SkillCollectionsT]):
     """
     Semantic Kernel function.
     """
@@ -45,7 +46,7 @@ class SKFunction(SKFunctionBase):
     _parameters: List[ParameterView]
     _delegate_type: DelegateTypes
     _function: Callable[..., Any]
-    _skill_collection: Optional[ReadOnlySkillCollectionBase]
+    _skill_collection: Optional[ReadOnlySkillCollection[SkillCollectionsT]]
     _log: Logger
     _ai_service: Optional[TextCompletionClientBase]
     _ai_request_settings: CompleteRequestSettings
@@ -204,7 +205,7 @@ class SKFunction(SKFunctionBase):
         self._chat_request_settings = ChatRequestSettings()
 
     def set_default_skill_collection(
-        self, skills: ReadOnlySkillCollectionBase
+        self, skills: ReadOnlySkillCollection[SkillCollectionsT]
     ) -> "SKFunction":
         self._skill_collection = skills
         return self
