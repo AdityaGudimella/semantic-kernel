@@ -19,6 +19,9 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion impo
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding import (
     OpenAITextEmbedding,
 )
+from semantic_kernel.connectors.ai.text_completion_client_base import (
+    TextCompletionClientBase,
+)
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
@@ -147,6 +150,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         SkillCollectionBase,
         PromptTemplatingEngine,
         SemanticTextMemoryBase,
+        TextCompletionClientBase,
     ],
 )
 def test_usage_in_pydantic_fields(sk_type: t.Type[PydanticFieldT]) -> None:

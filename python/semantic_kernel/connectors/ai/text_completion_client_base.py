@@ -4,13 +4,15 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, List, Union
 
+from semantic_kernel.pydantic_ import PydanticField
+
 if TYPE_CHECKING:
     from semantic_kernel.connectors.ai.complete_request_settings import (
         CompleteRequestSettings,
     )
 
 
-class TextCompletionClientBase(ABC):
+class TextCompletionClientBase(PydanticField, ABC):
     @abstractmethod
     async def complete_async(
         self,
