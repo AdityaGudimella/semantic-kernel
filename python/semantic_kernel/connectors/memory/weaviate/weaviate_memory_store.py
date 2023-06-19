@@ -9,9 +9,9 @@ import numpy as np
 import weaviate
 from weaviate.embedded import EmbeddedOptions
 
+from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
-from semantic_kernel.utils.null_logger import NullLogger
 
 SCHEMA = {
     "class": "MemoryRecord",

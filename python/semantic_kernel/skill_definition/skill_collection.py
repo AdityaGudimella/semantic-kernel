@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Final, Optional, Tuple
 
 import pydantic as pdt
 from typing_extensions import Self
@@ -13,13 +13,13 @@ from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
 )
 from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
-from semantic_kernel.utils.static_property import static_property
 
 if TYPE_CHECKING:
     from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 
 
 class SkillCollection(SKBaseModel, SkillCollectionBase):
+    GLOBAL_SKILL: Final[str] = "_GLOBAL_FUNCTIONS_"
     _skill_collection: Dict[str, Dict[str, "SKFunctionBase"]] = pdt.Field(
         alias="skill_collection", default_factory=dict
     )
@@ -150,7 +150,3 @@ class SkillCollection(SKBaseModel, SkillCollectionBase):
 
         s_name, f_name = s_name.lower(), f_name.lower()
         return s_name, f_name
-
-    @static_property
-    def GLOBAL_SKILL() -> Literal["_GLOBAL_FUNCTIONS_"]:
-        return "_GLOBAL_FUNCTIONS_"

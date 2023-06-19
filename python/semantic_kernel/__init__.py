@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from pathlib import Path
+
 from semantic_kernel import core_skills, memory
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.logging_ import NullLogger, SKLogger
@@ -16,6 +17,12 @@ from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
 from semantic_kernel.serialization import from_json, to_json
+from semantic_kernel.settings import (
+    AzureOpenAISettings,
+    KernelSettings,
+    OpenAISettings,
+    load_settings,
+)
 from semantic_kernel.utils.settings import (
     azure_openai_settings_from_dot_env,
     openai_settings_from_dot_env,
@@ -30,8 +37,6 @@ __all__ = [
     "Kernel",
     "SKLogger",
     "NullLogger",
-    "openai_settings_from_dot_env",
-    "azure_openai_settings_from_dot_env",
     "PromptTemplateConfig",
     "PromptTemplate",
     "ChatPromptTemplate",
