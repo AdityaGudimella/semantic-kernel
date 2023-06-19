@@ -20,6 +20,7 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding impor
     OpenAITextEmbedding,
 )
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.pydantic_ import PydanticField
@@ -145,6 +146,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         RetryMechanismBase,
         SkillCollectionBase,
         PromptTemplatingEngine,
+        SemanticTextMemoryBase,
     ],
 )
 def test_usage_in_pydantic_fields(sk_type: t.Type[PydanticFieldT]) -> None:
