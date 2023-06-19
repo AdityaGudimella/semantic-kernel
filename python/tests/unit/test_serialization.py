@@ -21,9 +21,12 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding impor
 )
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
+from semantic_kernel.reliability.retry_mechanism_base import RetryMechanismBase
 from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
@@ -31,11 +34,15 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
+from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
+from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
+    PromptTemplatingEngine,
+)
 from semantic_kernel.template_engine.template_tokenizer import TemplateTokenizer
 
 
@@ -125,6 +132,39 @@ def test_serialization_and_deserialization(kernel: sk.Kernel) -> None:
         kernel.all_text_completion_services()
         == loaded_kernel.all_text_completion_services()
     )
+
+
+PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
+
+
+@pytest.mark.parametrize(
+    "sk_type",
+    [
+        ContextVariables,
+        SKFunctionBase,
+        RetryMechanismBase,
+        SkillCollectionBase,
+        PromptTemplatingEngine,
+    ],
+)
+def test_usage_in_pydantic_fields(sk_type: t.Type[PydanticFieldT]) -> None:
+    """Semantic Kernel objects should be valid Pydantic fields.
+
+    Otherwise, they cannot be used in Pydantic models.
+    """
+
+    class TestModel(pdt.BaseModel):
+        """A test model."""
+
+        field: t.Optional[sk_type] = None
+
+    test_model = TestModel()
+    assert test_model is not None
+    serialized = test_model.json()
+    assert isinstance(serialized, str)
+    deserialized = TestModel.parse_raw(serialized)
+    assert isinstance(deserialized, TestModel)
+    assert deserialized == test_model
 
 
 class _Serializable(t.Protocol):

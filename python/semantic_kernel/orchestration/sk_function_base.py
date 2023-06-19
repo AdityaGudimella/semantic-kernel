@@ -14,6 +14,7 @@ from semantic_kernel.logging_ import SKLogger
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition.function_view import FunctionView
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     )
 
 
-class SKFunctionBase(ABC):
+class SKFunctionBase(PydanticField, ABC):
     FUNCTION_PARAM_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     FUNCTION_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     SKILL_NAME_REGEX = r"^[0-9A-Za-z_]*$"
