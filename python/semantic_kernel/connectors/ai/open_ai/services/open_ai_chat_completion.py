@@ -18,11 +18,12 @@ from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
 from semantic_kernel.logging_ import NullLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.settings import OpenAISettings
 
 
 class OpenAIChatCompletion(
-    pdt.BaseModel, ChatCompletionClientBase, TextCompletionClientBase
+    SKBaseModel, ChatCompletionClientBase, TextCompletionClientBase
 ):
     model_id: str = pdt.Field(
         description="OpenAI model name. See: https://platform.openai.com/docs/models"

@@ -5,6 +5,8 @@ import typing as t
 
 import pydantic as pdt
 
+from semantic_kernel.pydantic_ import SKBaseModel
+
 LogLevels = t.Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
@@ -38,7 +40,7 @@ class LoggerSettings(pdt.BaseSettings):
         return logger
 
 
-class SKLogger(pdt.BaseModel):
+class SKLogger(SKBaseModel):
     """API for logging."""
 
     name: str = pdt.Field(

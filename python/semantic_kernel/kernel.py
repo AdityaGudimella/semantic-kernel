@@ -33,7 +33,7 @@ from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function import SKFunction
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
-from semantic_kernel.pydantic_ import SKGenericModel
+from semantic_kernel.pydantic_ import SKBaseModel, SKGenericModel
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
@@ -72,7 +72,7 @@ ServiceT = TypeVar(
 Service = Callable[["Kernel"], ServiceT]
 
 
-class Services(pdt.BaseModel):
+class Services(SKBaseModel):
     """A collection of services that are used by the kernel."""
 
     text_completion: Dict[str, Service[TextCompletionClientBase]] = pdt.Field(
@@ -89,7 +89,7 @@ class Services(pdt.BaseModel):
     )
 
 
-class DefaultServices(pdt.BaseModel):
+class DefaultServices(SKBaseModel):
     """A collection of default services that are used by the kernel."""
 
     text_completion: Optional[str] = pdt.Field(

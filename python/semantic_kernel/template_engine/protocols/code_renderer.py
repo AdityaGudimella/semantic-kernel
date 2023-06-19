@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-import pydantic as pdt
-
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 
 
-class CodeRenderer(pdt.BaseModel):
+class CodeRenderer(PydanticField):
     """
     Protocol for dynamic code blocks that need async IO to be rendered.
     """

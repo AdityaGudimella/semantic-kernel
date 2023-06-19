@@ -4,8 +4,10 @@ import typing as t
 
 import pydantic as pdt
 
+from semantic_kernel.pydantic_ import SKBaseModel
 
-class CompletionConfig(pdt.BaseModel):
+
+class CompletionConfig(SKBaseModel):
     temperature: float = pdt.Field(
         default=0.0,
         ge=0.0,
@@ -60,7 +62,7 @@ class CompletionConfig(pdt.BaseModel):
             setattr(self, key, value)
 
 
-class InputParameter(pdt.BaseModel):
+class InputParameter(SKBaseModel):
     name: str = pdt.Field(..., description="The name of the input parameter.")
     description: str = pdt.Field(
         ..., description="A description of the input parameter."
@@ -70,7 +72,7 @@ class InputParameter(pdt.BaseModel):
     )
 
 
-class InputConfig(pdt.BaseModel):
+class InputConfig(SKBaseModel):
     parameters: t.List[InputParameter] = pdt.Field(
         default_factory=list,
         description="A list of input parameters for the prompt template.",
@@ -86,7 +88,7 @@ class InputConfig(pdt.BaseModel):
         return v
 
 
-class PromptTemplateConfig(pdt.BaseModel):
+class PromptTemplateConfig(SKBaseModel):
     schema_: int = 1
     type: str = "completion"
     description: str = ""
