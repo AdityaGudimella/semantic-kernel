@@ -47,6 +47,7 @@ from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
 from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
     PromptTemplatingEngine,
 )
+from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 from semantic_kernel.template_engine.template_tokenizer import TemplateTokenizer
 
 
@@ -151,6 +152,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         PromptTemplatingEngine,
         SemanticTextMemoryBase,
         TextCompletionClientBase,
+        TextRenderer,
     ],
 )
 def test_usage_in_pydantic_fields(sk_type: t.Type[PydanticFieldT]) -> None:

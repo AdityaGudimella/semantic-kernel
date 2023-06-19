@@ -2,12 +2,11 @@
 
 import typing as t
 
-import pydantic as pdt
-
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.pydantic_ import PydanticField
 
 
-class TextRenderer(pdt.BaseModel):
+class TextRenderer(PydanticField):
     """
     Protocol for static (text) blocks that don't need async rendering.
     """
