@@ -3,10 +3,11 @@ import os
 import aiofiles
 
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition import sk_function, sk_function_context_parameter
 
 
-class FileIOSkill:
+class FileIOSkill(PydanticField):
     """
     Description: Read and write from a file.
 
@@ -40,8 +41,7 @@ class FileIOSkill:
         assert os.path.exists(path), f"File {path} does not exist"
 
         async with aiofiles.open(path, "r", encoding="UTF-8") as fp:
-            content = await fp.read()
-            return content
+            return await fp.read()
 
     @sk_function(
         description="Write a file",

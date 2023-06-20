@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition import sk_function, sk_function_context_parameter
 
 
-class MathSkill:
+class MathSkill(PydanticField):
     """
     Description: MathSkill provides a set of functions to make Math calculations.
 
@@ -65,21 +66,20 @@ class MathSkill:
         """
         try:
             initial_value = int(initial_value_text)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
                 f"Initial value provided is not in numeric format: {initial_value_text}"
-            )
+            ) from e
 
         context_amount = context["Amount"]
-        if context_amount is not None:
-            try:
-                amount = int(context_amount)
-            except ValueError:
-                raise ValueError(
-                    f"Context amount provided is not in numeric format: {context_amount}"
-                )
-
-            result = initial_value + amount if add else initial_value - amount
-            return str(result)
-        else:
+        if context_amount is None:
             raise ValueError("Context amount should not be None.")
+        try:
+            amount = int(context_amount)
+        except ValueError as e:
+            raise ValueError(
+                f"Context amount provided is not in numeric format: {context_amount}"
+            ) from e
+
+        result = initial_value + amount if add else initial_value - amount
+        return str(result)

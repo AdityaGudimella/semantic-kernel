@@ -37,6 +37,12 @@ from semantic_kernel.connectors.ai.text_completion_client_base import (
 from semantic_kernel.connectors.memory.chroma.chroma_memory_store import (
     ChromaMemoryStore,
 )
+from semantic_kernel.core_skills.file_io_skill import FileIOSkill
+from semantic_kernel.core_skills.http_skill import HttpSkill
+from semantic_kernel.core_skills.math_skill import MathSkill
+from semantic_kernel.core_skills.text_memory_skill import TextMemorySkill
+from semantic_kernel.core_skills.text_skill import TextSkill
+from semantic_kernel.core_skills.time_skill import TimeSkill
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
@@ -171,6 +177,9 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         ChatCompletionClientBase,
         DelegateHandlers,
         DelegateInference,
+        FileIOSkill,
+        HttpSkill,
+        MathSkill,
         MemoryStoreBase,
         PromptTemplatingEngine,
         RetryMechanismBase,
@@ -178,7 +187,10 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         SKFunctionBase,
         SkillCollectionBase,
         TextCompletionClientBase,
+        TextMemorySkill,
         TextRenderer,
+        TextSkill,
+        TimeSkill,
     ],
 )
 def test_usage_in_pydantic_fields(sk_type: t.Type[PydanticFieldT]) -> None:
