@@ -35,6 +35,7 @@ from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
@@ -163,11 +164,12 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         BlockTypes,
         ContextVariables,
         ChatCompletionClientBase,
-        SKFunctionBase,
-        RetryMechanismBase,
-        SkillCollectionBase,
+        MemoryStoreBase,
         PromptTemplatingEngine,
+        RetryMechanismBase,
         SemanticTextMemoryBase,
+        SKFunctionBase,
+        SkillCollectionBase,
         TextCompletionClientBase,
         TextRenderer,
     ],
