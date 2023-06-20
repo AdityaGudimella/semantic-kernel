@@ -4,11 +4,13 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, List, Tuple, Union
 
+from semantic_kernel.pydantic_ import PydanticField
+
 if TYPE_CHECKING:
     from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSettings
 
 
-class ChatCompletionClientBase(ABC):
+class ChatCompletionClientBase(PydanticField):
     @abstractmethod
     async def complete_chat_async(
         self,

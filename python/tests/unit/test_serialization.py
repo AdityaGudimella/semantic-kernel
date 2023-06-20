@@ -1,5 +1,4 @@
 """Test serialization of SK Kernel."""
-import contextlib
 import typing as t
 
 import pydantic as pdt
@@ -7,6 +6,9 @@ import pytest
 import typing_extensions as te
 
 import semantic_kernel as sk
+from semantic_kernel.connectors.ai.chat_completion_client_base import (
+    ChatCompletionClientBase,
+)
 from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSettings
 from semantic_kernel.connectors.ai.complete_request_settings import (
     CompleteRequestSettings,
@@ -155,6 +157,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
     "sk_type",
     [
         ContextVariables,
+        ChatCompletionClientBase,
         SKFunctionBase,
         RetryMechanismBase,
         SkillCollectionBase,
