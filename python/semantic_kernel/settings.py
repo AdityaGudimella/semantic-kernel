@@ -8,6 +8,7 @@ from pydantic.env_settings import SettingsSourceCallable
 from yaml import safe_load
 
 from semantic_kernel.logging_ import LoggerSettings
+from semantic_kernel.optional_packages.chromadb import Settings as ChromaDBSettings
 from semantic_kernel.utils.openai_ import OpenAIAPIKwargs
 
 
@@ -165,13 +166,17 @@ class KernelSettings(SKBaseSettings):
     )
 
     settings_path: Path = pdt.Field(
-        DEFAULT_SETTINGS_PATH,
+        default=DEFAULT_SETTINGS_PATH,
         description="Path to the directory containing the settings file.",
     )
     openai: OpenAISettings
     azure_openai: t.Optional[AzureOpenAISettings] = pdt.Field(
-        None,
+        default=None,
         description="Settings to configure the Azure OpenAI API.",
+    )
+    chroma_db: ChromaDBSettings = pdt.Field(
+        default_factory=ChromaDBSettings,
+        description="Settings to configure the ChromaDB.",
     )
     logging: LoggerSettings = pdt.Field(
         default_factory=LoggerSettings,

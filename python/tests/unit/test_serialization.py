@@ -34,6 +34,9 @@ from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding impor
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
+from semantic_kernel.connectors.memory.chroma.chroma_memory_store import (
+    ChromaMemoryStore,
+)
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
@@ -234,6 +237,7 @@ def serializable(
             prompt_config=PromptTemplateConfig(),
         ),
         ChatRequestSettings: ChatRequestSettings(),
+        ChromaMemoryStore: ChromaMemoryStore(),
         CodeBlock: CodeBlock(),
         CodeTokenizer: CodeTokenizer(),
         CodeRenderer: CodeRenderer(),
@@ -332,6 +336,7 @@ def _recursive_eq(
         Block,
         ChatPromptTemplate,
         ChatRequestSettings,
+        ChromaMemoryStore,
         CodeBlock,
         CodeRenderer,
         CodeTokenizer,
