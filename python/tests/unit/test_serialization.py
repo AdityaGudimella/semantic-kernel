@@ -41,6 +41,7 @@ from semantic_kernel.kernel import Kernel
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.orchestration.delegate_handlers import DelegateHandlers
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
 from semantic_kernel.pydantic_ import PydanticField
@@ -167,6 +168,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         BlockTypes,
         ContextVariables,
         ChatCompletionClientBase,
+        DelegateHandlers,
         MemoryStoreBase,
         PromptTemplatingEngine,
         RetryMechanismBase,
