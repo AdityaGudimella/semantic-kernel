@@ -14,7 +14,7 @@ class LoggerSettings(pdt.BaseSettings):
     """Settings to configure logging for SemanticKernel."""
 
     log_level: LogLevels = pdt.Field(
-        default="CRITICAL", env="SK_LOG_LEVEL", description="Logging level to use."
+        default="DEBUG", env="SK_LOG_LEVEL", description="Logging level to use."
     )
 
     def get_logger(self, name: str) -> logging.Logger:

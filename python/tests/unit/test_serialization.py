@@ -1,4 +1,5 @@
 """Test serialization of SK Kernel."""
+import contextlib
 import typing as t
 
 import pydantic as pdt
@@ -9,6 +10,15 @@ import semantic_kernel as sk
 from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSettings
 from semantic_kernel.connectors.ai.complete_request_settings import (
     CompleteRequestSettings,
+)
+from semantic_kernel.connectors.ai.open_ai.services.azure_chat_completion import (
+    AzureChatCompletion,
+)
+from semantic_kernel.connectors.ai.open_ai.services.azure_text_completion import (
+    AzureTextCompletion,
+)
+from semantic_kernel.connectors.ai.open_ai.services.azure_text_embedding import (
+    AzureTextEmbedding,
 )
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion import (
     OpenAIChatCompletion,
@@ -208,6 +218,16 @@ def serializable(
         OpenAITextEmbedding: OpenAITextEmbedding(
             model_id="text-embedding-ada-002", settings=kernel_settings.openai
         ),
+        AzureTextCompletion: AzureTextCompletion(
+            deployment="text-davinci-003", settings=kernel_settings.azure_openai
+        ),
+        AzureChatCompletion: AzureChatCompletion(
+            deployment="gpt-3.5-turbo", settings=kernel_settings.azure_openai
+        ),
+        AzureTextEmbedding: AzureTextEmbedding(
+            deployment="text-embedding-ada-002", settings=kernel_settings.azure_openai
+        ),
+        PassThroughWithoutRetry: PassThroughWithoutRetry(),
         PromptTemplateConfig: PromptTemplateConfig(),
         PromptTemplateEngine: PromptTemplateEngine(),
         PromptTemplate: PromptTemplate(
@@ -215,7 +235,6 @@ def serializable(
             template_engine=PromptTemplateEngine(),
             prompt_config=PromptTemplateConfig(),
         ),
-        PassThroughWithoutRetry: PassThroughWithoutRetry(),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
         Block: Block(),
@@ -227,6 +246,67 @@ def serializable(
         ContextVariables: ContextVariables(),
     }
     return cls_obj_map[serializable_type]
+
+
+def _recursive_eq(
+    exp: t.Union[pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, t.Dict[str, t.Any]],
+    act: t.Union[pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, t.Dict[str, t.Any]],
+) -> t.Union[t.Literal[True], t.NoReturn]:
+    """Recursively check equality of two objects.
+
+    This is required for the following reasons:
+
+    1. Classes that don't implement an `__eq__` method need to be compared by their
+         attributes.
+    2. Pydantic `SecretField` objects are not serialized, and so should not be compared
+            for equality.
+
+    Args:
+        exp: The expected object.
+        act: The actual object.
+
+    Returns:
+        True if the objects are equal, otherwise raises a `pytest.fail` exception.
+    """
+    if exp == act:
+        return True
+    if not isinstance(
+        exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, pdt.SecretField, dict)
+    ):
+        pytest.fail(f"Expected: {exp}, but got: {act}")
+    if isinstance(exp, pdt.SecretField) and isinstance(act, pdt.SecretField):
+        # Pydantic `SecretField` objects are not serialized, and so should not be
+        # compared for equality.
+        return True
+    if isinstance(exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings)):
+        if not isinstance(act, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings)):
+            pytest.fail(
+                f"Expected object of type {type(exp)}, but got object of type {type(act)}"
+            )
+        exp = exp.dict()
+        act = act.dict()
+    for key in exp:
+        if key not in act:
+            pytest.fail(
+                f"Expected key {key} not in actual object with keys: {list(act.keys())}"
+            )
+    if len(exp) != len(act):
+        pytest.fail(
+            "Expected and actual objects have different numbers of attributes: "
+            + f"{len(exp)} != {len(act)} "
+            + f"with types: exp -> {type(exp)}, act -> {type(act)} "
+            + f"and values: exp -> {exp}, act -> {act}"
+        )
+    for key in exp:
+        if key not in act:
+            pytest.fail(f"Expected object has attribute {key} that actual does not.")
+        if not _recursive_eq(exp[key], act[key]):
+            pytest.fail(
+                "Expected and actual objects have different values for attribute "
+                + f"{key}: {exp[key]} != {act[key]} "
+                + f"with types: exp -> {type(exp[key])}, act -> {type(act[key])}"
+            )
+    return True
 
 
 @pytest.mark.parametrize(
@@ -244,12 +324,15 @@ def serializable(
         OpenAIChatCompletion,
         OpenAITextCompletion,
         OpenAITextEmbedding,
+        PassThroughWithoutRetry,
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,
-        PassThroughWithoutRetry,
         SkillCollection,
         TemplateTokenizer,
+        AzureChatCompletion,
+        AzureTextCompletion,
+        AzureTextEmbedding,
     ],
 )
 def test_serialization(serializable: _Serializable) -> None:
@@ -257,10 +340,4 @@ def test_serialization(serializable: _Serializable) -> None:
     serialized = serializable.json()
     assert isinstance(serialized, str), serialized
     deserialized = serializable.parse_raw(serialized)
-    try:
-        assert serializable == deserialized
-    except AssertionError:
-        # If your class does not implement any equality checks, we want to ensure that
-        # we're not doing an id comparison and instead check the attributes.
-        if vars(serializable) != vars(deserialized):
-            raise
+    assert _recursive_eq(serializable, deserialized)

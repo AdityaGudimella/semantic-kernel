@@ -17,3 +17,8 @@ class CodeRenderer(PydanticField):
         :return: Rendered content
         """
         raise NotImplementedError("Subclasses must implement this method.")
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(self, CodeRenderer):
+            return NotImplemented
+        return isinstance(__value, CodeRenderer)

@@ -8,6 +8,7 @@ from pydantic.env_settings import SettingsSourceCallable
 from yaml import safe_load
 
 from semantic_kernel.logging_ import LoggerSettings
+from semantic_kernel.utils.openai_ import OpenAIAPIKwargs
 
 
 class SKBaseSettings(pdt.BaseSettings):
@@ -56,6 +57,22 @@ class OpenAISettings(SKBaseSettings):
         None,
         description="OpenAI API endpoint. See: ?",
     )
+    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
+
+    def __init__(self, **data: t.Any) -> None:
+        super().__init__(**data)
+        self._openai_api_kwargs = OpenAIAPIKwargs(
+            api_key=self.api_key.get_secret_value(),
+            api_type=self.api_type,
+            api_base=self.endpoint,
+            api_version=self.api_version,
+            organization=self.org_id,
+        )
+
+    @property
+    def openai_api_kwargs(self) -> OpenAIAPIKwargs:
+        """Get the kwargs used for the OpenAI API calls."""
+        return self._openai_api_kwargs
 
 
 class AzureAPIType(str, enum.Enum):
@@ -91,6 +108,7 @@ class AzureOpenAISettings(SKBaseSettings):
         description="Whether to use Azure Active Directory authentication.",
     )
     _openai_settings: OpenAISettings = pdt.PrivateAttr()
+    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
 
     @pdt.validator("endpoint")
     def validate_endpoint(cls, v: str) -> str:
@@ -105,6 +123,13 @@ class AzureOpenAISettings(SKBaseSettings):
             k: v for k, v in data.items() if k in OpenAISettings.__fields__
         }
         self._openai_settings = OpenAISettings(**openai_kwargs)
+        self._openai_api_kwargs = OpenAIAPIKwargs(
+            api_key=self.api_key.get_secret_value(),
+            api_type="azure",
+            api_base=self.endpoint,
+            api_version=self.api_version,
+            organization=None,
+        )
 
     @property
     def api_type(self) -> AzureAPIType:
@@ -115,6 +140,11 @@ class AzureOpenAISettings(SKBaseSettings):
     def openai_settings(self) -> OpenAISettings:
         """Get the OpenAI settings."""
         return self._openai_settings
+
+    @property
+    def openai_api_kwargs(self) -> OpenAIAPIKwargs:
+        """Get the kwargs used for the OpenAI API calls."""
+        return self._openai_api_kwargs
 
 
 class KernelSettings(SKBaseSettings):
@@ -139,6 +169,10 @@ class KernelSettings(SKBaseSettings):
         description="Path to the directory containing the settings file.",
     )
     openai: OpenAISettings
+    azure_openai: t.Optional[AzureOpenAISettings] = pdt.Field(
+        None,
+        description="Settings to configure the Azure OpenAI API.",
+    )
     logging: LoggerSettings = pdt.Field(
         default_factory=LoggerSettings,
         description="Settings to configure the logging.",

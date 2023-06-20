@@ -27,9 +27,8 @@ async def test_azure_summarize_conversation_using_skill(
     kernel.add_text_completion_service(
         "text_completion",
         sk_oai.AzureTextCompletion(
-            deployment_name,
-            azure_openai_settings.endpoint,
-            azure_openai_settings.api_key,
+            deployment=deployment_name,
+            settings=azure_openai_settings,
         ),
     )
 

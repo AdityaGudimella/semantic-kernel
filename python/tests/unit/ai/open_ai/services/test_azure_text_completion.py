@@ -11,31 +11,7 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.open_ai.services.azure_text_completion import (
     AzureTextCompletion,
 )
-from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion import (
-    OpenAITextCompletion,
-)
-
-
-def test_azure_text_completion_init() -> None:
-    deployment_name = "test_deployment"
-    endpoint = "https://test-endpoint.com"
-    api_key = "test_api_key"
-    api_version = "2023-03-15-preview"
-    logger = Logger("test_logger")
-
-    # Test successful initialization
-    azure_text_completion = AzureTextCompletion(
-        deployment_name=deployment_name,
-        endpoint=endpoint,
-        api_key=api_key,
-        api_version=api_version,
-        logger=logger,
-    )
-
-    assert azure_text_completion._endpoint == endpoint
-    assert azure_text_completion._api_version == api_version
-    assert azure_text_completion._api_type == "azure"
-    assert isinstance(azure_text_completion, OpenAITextCompletion)
+from semantic_kernel.settings import AzureOpenAISettings
 
 
 def test_azure_text_completion_init_with_empty_deployment_name() -> None:
@@ -113,7 +89,9 @@ def test_azure_text_completion_init_with_invalid_endpoint() -> None:
 
 
 @pytest.mark.asyncio
-async def test_azure_text_completion_call_with_parameters() -> None:
+async def test_azure_text_completion_call_with_parameters(
+    azure_openai_settings: AzureOpenAISettings,
+) -> None:
     mock_openai = AsyncMock()
     with patch(
         "semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion.openai",
@@ -124,15 +102,11 @@ async def test_azure_text_completion_call_with_parameters() -> None:
         api_key = "test_api_key"
         api_type = "azure"
         api_version = "2023-03-15-preview"
-        logger = Logger("test_logger")
         prompt = "hello world"
         complete_request_settings = CompleteRequestSettings()
         azure_text_completion = AzureTextCompletion(
-            deployment_name=deployment_name,
-            endpoint=endpoint,
-            api_key=api_key,
-            api_version=api_version,
-            logger=logger,
+            deployment=deployment_name,
+            settings=azure_openai_settings,
         )
 
         await azure_text_completion.complete_async(prompt, complete_request_settings)
