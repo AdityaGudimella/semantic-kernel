@@ -53,6 +53,7 @@ from semantic_kernel.settings import KernelSettings
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
 from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
 from semantic_kernel.template_engine.blocks.block import Block
+from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
@@ -158,6 +159,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
     "sk_type",
     [
         BasicPlanner,
+        BlockTypes,
         ContextVariables,
         ChatCompletionClientBase,
         SKFunctionBase,
