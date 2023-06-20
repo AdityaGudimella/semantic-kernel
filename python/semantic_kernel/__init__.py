@@ -23,10 +23,6 @@ from semantic_kernel.settings import (
     OpenAISettings,
     load_settings,
 )
-from semantic_kernel.utils.settings import (
-    azure_openai_settings_from_dot_env,
-    openai_settings_from_dot_env,
-)
 
 __version__ = "0.2.8.dev"
 
@@ -50,4 +46,8 @@ __all__ = [
     "to_json",
     "__version__",
     "REPO_ROOT",
+    "AzureOpenAISettings",
+    "KernelSettings",
+    "OpenAISettings",
+    "load_settings",
 ]

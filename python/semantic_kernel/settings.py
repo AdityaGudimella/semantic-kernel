@@ -9,6 +9,14 @@ from yaml import safe_load
 from semantic_kernel.logging_ import LoggerSettings
 
 
+class SKBaseSettings(pdt.BaseSettings):
+    class Config:
+        """Base Pydantic configuration for all SemanticKernel Settings classes."""
+
+        # One shouldn't be able to modify the settings once they're loaded.
+        allow_mutation = False
+
+
 def yaml_config_source(config: pdt.BaseSettings) -> dict[str, str]:
     """Config source that loads variables from a yaml file in home directory.
 
@@ -21,7 +29,7 @@ def yaml_config_source(config: pdt.BaseSettings) -> dict[str, str]:
     return safe_load(settings_path.read_text()) if settings_path.exists() else {}
 
 
-class OpenAISettings(pdt.BaseSettings):
+class OpenAISettings(SKBaseSettings):
     """Settings to configure the OpenAI API."""
 
     api_key: str = pdt.Field(
@@ -44,14 +52,22 @@ class OpenAISettings(pdt.BaseSettings):
         description="OpenAI API endpoint. See: ?",
     )
 
-    class Config:
-        """Pydantic configuration."""
 
-        # One shouldn't be able to modify the settings once they're loaded.
-        allow_mutation = False
+class AzureOpenAISettings(SKBaseSettings):
+    """Settings to configure the Azure OpenAI API."""
+
+    api_key: str = pdt.Field(
+        description="Azure OpenAI API key. See: ?",
+    )
+    endpoint: str = pdt.Field(
+        description="Azure OpenAI API endpoint. See: ?",
+    )
+    deployment: str = pdt.Field(
+        description="Azure OpenAI deployment name. See: ?",
+    )
 
 
-class KernelSettings(pdt.BaseSettings):
+class KernelSettings(SKBaseSettings):
     """Settings to configure a semantic kernel `Kernel` object.
 
     If you have a yaml file at `DEFAULT_SETTINGS_PATH` with the correct configuration,
@@ -80,9 +96,6 @@ class KernelSettings(pdt.BaseSettings):
 
     class Config:  # type: ignore
         """Pydantic configuration."""
-
-        # One shouldn't be able to modify the settings once they're loaded.
-        allow_mutation = False
 
         @classmethod
         def customise_sources(
