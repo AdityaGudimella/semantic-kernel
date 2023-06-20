@@ -66,7 +66,6 @@ def kernel(kernel_settings: KernelSettings) -> sk.Kernel:
 
     kernel = sk.Kernel()
 
-    api_key, org_id = sk.openai_settings_from_dot_env()
     kernel.add_text_completion_service(
         "davinci-003",
         OpenAITextCompletion(

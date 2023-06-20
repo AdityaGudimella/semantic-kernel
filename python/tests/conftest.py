@@ -1,63 +1,17 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-import os
 import typing as t
 
 import pytest
 
 import semantic_kernel as sk
 import semantic_kernel.connectors.ai.open_ai as sk_oai
-from semantic_kernel.settings import KernelSettings, load_settings
-
-
-@pytest.fixture(scope="session")
-def create_kernel():
-    return sk.Kernel()
-
-
-@pytest.fixture(scope="session")
-def get_aoai_config():
-    if "Python_Integration_Tests" in os.environ:
-        deployment_name = os.environ["AzureOpenAIEmbeddings__DeploymentName"]
-        api_key = os.environ["AzureOpenAI__ApiKey"]
-        endpoint = os.environ["AzureOpenAI__Endpoint"]
-    else:
-        # Load credentials from .env file
-        deployment_name, api_key, endpoint = sk.azure_openai_settings_from_dot_env()
-        deployment_name = "text-embedding-ada-002"
-
-    return deployment_name, api_key, endpoint
-
-
-@pytest.fixture(scope="session")
-def get_oai_config():
-    if "Python_Integration_Tests" in os.environ:
-        api_key = os.environ["OpenAI__ApiKey"]
-        org_id = None
-    else:
-        # Load credentials from .env file
-        api_key, org_id = sk.openai_settings_from_dot_env()
-
-    return api_key, org_id
-
-
-@pytest.fixture()
-def oai_config():
-    """Returns the default OpenAI config."""
-
-
-@pytest.fixture()
-def azure_oai_config():
-    """Returns the default Azure OpenAI config."""
-
-
-@pytest.fixture()
-def service_type() -> t.Optional[str]:
-    """Returns the default service type."""
-    return None
-
-
-KernelServiceType = t.Optional[t.Literal["chat", "text_completion"]]
+from semantic_kernel.settings import (
+    AzureOpenAISettings,
+    KernelSettings,
+    OpenAISettings,
+    load_settings,
+)
 
 
 @pytest.fixture()
@@ -67,20 +21,52 @@ def kernel_settings() -> KernelSettings:
 
 
 @pytest.fixture()
-def kernel(service_type: KernelServiceType) -> sk.Kernel:
+def openai_settings(kernel_settings: KernelSettings) -> OpenAISettings:
+    """Returns the default OpenAI settings."""
+    return kernel_settings.openai
+
+
+@pytest.fixture()
+def azure_openai_settings(kernel_settings: KernelSettings) -> AzureOpenAISettings:
+    """Returns the default Azure OpenAI config."""
+    return kernel_settings.azure_openai
+
+
+@pytest.fixture()
+def service_type() -> t.Optional[str]:
+    """Returns the default service type."""
+    return None
+
+
+@pytest.fixture(scope="session")
+def create_kernel():
+    return sk.Kernel()
+
+
+KernelServiceType = t.Optional[t.Literal["chat", "text_completion"]]
+
+
+@pytest.fixture()
+def kernel(
+    service_type: KernelServiceType, openai_settings: OpenAISettings
+) -> sk.Kernel:
     """Returns the default kernel instance."""
     kernel = sk.Kernel()
     if not service_type:
         return kernel
-    api_key, org_id = sk.openai_settings_from_dot_env()
     if service_type == "chat":
         kernel.add_chat_service(
-            service_type, sk_oai.OpenAIChatCompletion("gpt-3.5-turbo", api_key, org_id)
+            service_type,
+            sk_oai.OpenAIChatCompletion(
+                model_id="gpt-3.5-turbo", settings=openai_settings
+            ),
         )
     else:
         kernel.add_text_completion_service(
             service_type,
-            sk_oai.OpenAITextCompletion("text-davinci-003", api_key, org_id),
+            sk_oai.OpenAITextCompletion(
+                model_id="text-davinci-003", settings=openai_settings
+            ),
         )
     return kernel
 
@@ -146,10 +132,10 @@ def chat_function(
 
 
 @pytest.fixture()
-def chat_kernel(kernel: sk.Kernel) -> sk.Kernel:
+def chat_kernel(kernel: sk.Kernel, openai_settings: OpenAISettings) -> sk.Kernel:
     """Returns a kernel with a chat function registered."""
-    api_key, org_id = sk.openai_settings_from_dot_env()
     kernel.add_chat_service(
-        "chat-gpt", sk_oai.OpenAIChatCompletion("gpt-3.5-turbo", api_key, org_id)
+        "chat-gpt",
+        sk_oai.OpenAIChatCompletion(model_id="gpt-3.5-turbo", settings=openai_settings),
     )
     return kernel

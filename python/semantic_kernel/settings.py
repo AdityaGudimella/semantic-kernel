@@ -1,4 +1,5 @@
 """Settings to configure the semantic kernel."""
+import enum
 import typing as t
 from pathlib import Path
 
@@ -32,12 +33,16 @@ def yaml_config_source(config: pdt.BaseSettings) -> dict[str, str]:
 class OpenAISettings(SKBaseSettings):
     """Settings to configure the OpenAI API."""
 
-    api_key: str = pdt.Field(
+    api_key: pdt.SecretStr = pdt.Field(
         description="OpenAI API key. See: https://platform.openai.com/account/api-keys",
     )
     org_id: t.Optional[str] = pdt.Field(
-        None,  # Only required if your account belongs to multiple organizations.
-        description="OpenAI organization ID. See: https://platform.openai.com/account/org-settings",  # noqa: E501
+        None,
+        description=(
+            "OpenAI organization ID."
+            + " See: https://platform.openai.com/account/org-settings"
+            + " Only required if your account belongs to multiple organizations."
+        ),
     )
     api_type: t.Optional[str] = pdt.Field(
         None,
@@ -53,18 +58,63 @@ class OpenAISettings(SKBaseSettings):
     )
 
 
+class AzureAPIType(str, enum.Enum):
+    """Azure API type."""
+
+    Azure = "azure"
+    AzureAD = "azure_ad"
+
+
 class AzureOpenAISettings(SKBaseSettings):
     """Settings to configure the Azure OpenAI API."""
 
-    api_key: str = pdt.Field(
-        description="Azure OpenAI API key. See: ?",
+    api_key: pdt.SecretStr = pdt.Field(
+        description=(
+            "Azure OpenAI API key. See: ?"
+            + " This value can be found in the Keys & Endpoint section when examining"
+            + " your resource in the Azure portal. You can use either KEY1 or KEY2."
+        )
     )
     endpoint: str = pdt.Field(
-        description="Azure OpenAI API endpoint. See: ?",
+        description=(
+            "Azure OpenAI API endpoint."
+            + " This value can be found in the Keys & Endpoint section when examining"
+            + " your resource from the Azure portal."
+        )
     )
-    deployment: str = pdt.Field(
-        description="Azure OpenAI deployment name. See: ?",
+    api_version: str = pdt.Field(
+        default="2023-03-15-preview",
+        description="Azure OpenAI API version. See: ?",
     )
+    ad_auth: bool = pdt.Field(
+        default=False,
+        description="Whether to use Azure Active Directory authentication.",
+    )
+    _openai_settings: OpenAISettings = pdt.PrivateAttr()
+
+    @pdt.validator("endpoint")
+    def validate_endpoint(cls, v: str) -> str:
+        """Validate the endpoint."""
+        if not v.startswith("https://"):
+            raise ValueError("Endpoint must start with 'https://'")
+        return v
+
+    def __init__(self, **data: t.Any) -> None:
+        super().__init__(**data)
+        openai_kwargs = {
+            k: v for k, v in data.items() if k in OpenAISettings.__fields__
+        }
+        self._openai_settings = OpenAISettings(**openai_kwargs)
+
+    @property
+    def api_type(self) -> AzureAPIType:
+        """Get the Azure API type."""
+        return AzureAPIType.AzureAD if self.ad_auth else AzureAPIType.Azure
+
+    @property
+    def openai_settings(self) -> OpenAISettings:
+        """Get the OpenAI settings."""
+        return self._openai_settings
 
 
 class KernelSettings(SKBaseSettings):
