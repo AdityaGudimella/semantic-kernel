@@ -44,6 +44,7 @@ from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
 from semantic_kernel.reliability.retry_mechanism_base import RetryMechanismBase
+from semantic_kernel.semantic_functions.chat_prompt_template import ChatPromptTemplate
 from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
@@ -215,6 +216,27 @@ def serializable(
     This fixture is a workaround.
     """
     cls_obj_map = {
+        AzureTextCompletion: AzureTextCompletion(
+            deployment="text-davinci-003", settings=kernel_settings.azure_openai
+        ),
+        AzureChatCompletion: AzureChatCompletion(
+            deployment="gpt-3.5-turbo", settings=kernel_settings.azure_openai
+        ),
+        AzureTextEmbedding: AzureTextEmbedding(
+            deployment="text-embedding-ada-002", settings=kernel_settings.azure_openai
+        ),
+        Block: Block(),
+        ChatPromptTemplate: ChatPromptTemplate(
+            template="",
+            template_engine=PromptTemplateEngine(),
+            prompt_config=PromptTemplateConfig(),
+        ),
+        ChatRequestSettings: ChatRequestSettings(),
+        CodeBlock: CodeBlock(),
+        CodeTokenizer: CodeTokenizer(),
+        CodeRenderer: CodeRenderer(),
+        CompleteRequestSettings: CompleteRequestSettings(),
+        ContextVariables: ContextVariables(),
         Kernel: Kernel(),
         OpenAITextCompletion: OpenAITextCompletion(
             model_id="text-davinci-003", settings=kernel_settings.openai
@@ -224,15 +246,6 @@ def serializable(
         ),
         OpenAITextEmbedding: OpenAITextEmbedding(
             model_id="text-embedding-ada-002", settings=kernel_settings.openai
-        ),
-        AzureTextCompletion: AzureTextCompletion(
-            deployment="text-davinci-003", settings=kernel_settings.azure_openai
-        ),
-        AzureChatCompletion: AzureChatCompletion(
-            deployment="gpt-3.5-turbo", settings=kernel_settings.azure_openai
-        ),
-        AzureTextEmbedding: AzureTextEmbedding(
-            deployment="text-embedding-ada-002", settings=kernel_settings.azure_openai
         ),
         PassThroughWithoutRetry: PassThroughWithoutRetry(),
         PromptTemplateConfig: PromptTemplateConfig(),
@@ -244,13 +257,6 @@ def serializable(
         ),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
-        Block: Block(),
-        ChatRequestSettings: ChatRequestSettings(),
-        CodeBlock: CodeBlock(),
-        CodeTokenizer: CodeTokenizer(),
-        CodeRenderer: CodeRenderer(),
-        CompleteRequestSettings: CompleteRequestSettings(),
-        ContextVariables: ContextVariables(),
     }
     return cls_obj_map[serializable_type]
 
@@ -322,6 +328,7 @@ def _recursive_eq(
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
         # Kernel,
         Block,
+        ChatPromptTemplate,
         ChatRequestSettings,
         CodeBlock,
         CodeRenderer,
