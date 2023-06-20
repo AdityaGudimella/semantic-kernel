@@ -6,6 +6,7 @@ from typing import NoReturn
 from semantic_kernel.kernel_exception import KernelException
 from semantic_kernel.orchestration.delegate_types import DelegateTypes
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 
 
 def _infers(delegate_type):
@@ -59,7 +60,8 @@ def _first_param_is_context(signature: Signature) -> bool:
     return _has_first_param_with_type(signature, SKContext)
 
 
-class DelegateInference:
+class DelegateInference(PydanticField):
+    # TODO(Adi): Replace this with a function too!
     @staticmethod
     @_infers(DelegateTypes.Void)
     def infer_void(signature: Signature, awaitable: bool) -> bool:
@@ -238,9 +240,11 @@ class DelegateInference:
         for name, value in DelegateInference.__dict__.items():
             wrapped = getattr(value, "__wrapped__", getattr(value, "__func__", None))
 
-            if name.startswith("infer_") and hasattr(wrapped, "_delegate_type"):
-                # Get the delegate type
-                if wrapped(function_signature, awaitable):
-                    return wrapped._delegate_type
+            if (
+                name.startswith("infer_")
+                and hasattr(wrapped, "_delegate_type")
+                and wrapped(function_signature, awaitable)
+            ):
+                return wrapped._delegate_type
 
         return DelegateTypes.Unknown
