@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, List, Union
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     )
 
 
-class TextCompletionClientBase(PydanticField, ABC):
+class TextCompletionClientBase(PydanticField):
     @abstractmethod
     async def complete_async(
         self,

@@ -1,6 +1,10 @@
 """Test serialization of SK Kernel."""
+import contextlib
+import math
+import sys
 import typing as t
 
+import numpy as np
 import pydantic as pdt
 import pytest
 import typing_extensions as te
@@ -46,6 +50,9 @@ from semantic_kernel.connectors.ai.text_completion_client_base import (
 from semantic_kernel.connectors.memory.chroma.chroma_memory_store import (
     ChromaMemoryStore,
 )
+from semantic_kernel.connectors.memory.weaviate.weaviate_memory_store import (
+    WeaviateMemoryStore,
+)
 from semantic_kernel.core_skills.file_io_skill import FileIOSkill
 from semantic_kernel.core_skills.http_skill import HttpSkill
 from semantic_kernel.core_skills.math_skill import MathSkill
@@ -53,6 +60,7 @@ from semantic_kernel.core_skills.text_memory_skill import TextMemorySkill
 from semantic_kernel.core_skills.text_skill import TextSkill
 from semantic_kernel.core_skills.time_skill import TimeSkill
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
@@ -276,6 +284,7 @@ def serializable(
             model_id="EleutherAI/gpt-neo-2.7B"
         ),
         Kernel: Kernel(),
+        MemoryRecord: MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
         OpenAITextCompletion: OpenAITextCompletion(
             model_id="text-davinci-003", settings=kernel_settings.openai
         ),
@@ -319,8 +328,15 @@ def _recursive_eq(
     Returns:
         True if the objects are equal, otherwise raises a `pytest.fail` exception.
     """
-    if exp == act:
+    if isinstance(exp, np.ndarray) and isinstance(act, np.ndarray):
+        if exp.shape != act.shape:
+            pytest.fail(f"Expected: {exp.shape}, but got: {act.shape}")
+        if not np.allclose(exp, act):
+            pytest.fail(f"Expected: {exp}, but got: {act}")
         return True
+    with contextlib.suppress(ValueError):
+        if exp == act:
+            return True
     if not isinstance(
         exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, pdt.SecretField, dict)
     ):
@@ -376,6 +392,7 @@ def _recursive_eq(
         ContextVariables,
         HuggingFaceTextCompletion,
         HuggingFaceTextEmbedding,
+        MemoryRecord,
         OpenAIChatCompletion,
         OpenAITextCompletion,
         OpenAITextEmbedding,
@@ -383,6 +400,13 @@ def _recursive_eq(
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,
+        pytest.param(
+            WeaviateMemoryStore,
+            marks=pytest.mark.skipif(
+                not sys.platform.startswith("linux"),
+                reason="WeaviateMemoryStore only supported on Linux",
+            ),
+        ),
         SkillCollection,
         TemplateTokenizer,
         AzureChatCompletion,

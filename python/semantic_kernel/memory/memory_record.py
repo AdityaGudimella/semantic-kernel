@@ -1,67 +1,56 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import Optional
+import typing as t
 
+import pydantic as pdt
 from numpy import ndarray
 
+from semantic_kernel.pydantic_ import PydanticNDArray, SKBaseModel
 
-class MemoryRecord:
-    _key: str
-    _timestamp: str
-    _is_reference: bool
-    _external_source_name: Optional[str]
-    _id: str
-    _description: Optional[str]
-    _text: Optional[str]
-    _additional_metadata: Optional[str]
-    _embedding: ndarray
+SKBaseModel.from_orm
 
-    def __init__(
-        self,
-        is_reference: bool,
-        external_source_name: Optional[str],
-        id: str,
-        description: Optional[str],
-        text: Optional[str],
-        additional_metadata: Optional[str],
-        embedding: Optional[ndarray],
-        key: Optional[str] = None,
-        timestamp: Optional[str] = None,
-    ) -> None:
-        """Initialize a new instance of MemoryRecord.
 
-        Arguments:
-            is_reference {bool} -- Whether the record is a reference record.
-            external_source_name {Optional[str]} -- The name of the external source.
-            id {str} -- A unique for the record.
-            description {Optional[str]} -- The description of the record.
-            text {Optional[str]} -- The text of the record.
-            additional_metadata {Optional[str]} -- Custom metadata for the record.
-            embedding {ndarray} -- The embedding of the record.
+class MemoryRecord(SKBaseModel):
+    """A record in the memory."""
 
-        Returns:
-            None -- None.
-        """
-        self._key = key
-        self._timestamp = timestamp
-        self._is_reference = is_reference
-        self._external_source_name = external_source_name
-        self._id = id
-        self._description = description
-        self._text = text
-        self._additional_metadata = additional_metadata
-        self._embedding = embedding
-
-    @property
-    def embedding(self) -> ndarray:
-        return self._embedding
+    key: t.Optional[str] = pdt.Field(
+        default=None,
+        description="The key of the record.",
+    )
+    timestamp: t.Optional[str] = pdt.Field(
+        default=None,
+        description="The timestamp of the record.",
+    )
+    is_reference: t.Optional[bool] = pdt.Field(
+        description="Whether the record is a reference record.",
+    )
+    # TODO(ADI): Why don't these optional fields haved default values?
+    external_source_name: t.Optional[str] = pdt.Field(
+        description="The name of the external source.",
+    )
+    id_: str = pdt.Field(
+        alias="skId",
+        description="A unique for the record.",
+    )
+    description: t.Optional[str] = pdt.Field(
+        description="The description of the record.",
+    )
+    text: t.Optional[str] = pdt.Field(
+        description="The text of the record.",
+    )
+    additional_metadata: t.Optional[str] = pdt.Field(
+        description="Custom metadata for the record.",
+    )
+    embedding: t.Optional[PydanticNDArray] = pdt.Field(
+        description="The embedding of the record.",
+    )
 
     @staticmethod
     def reference_record(
         external_id: str,
         source_name: str,
-        description: Optional[str],
-        additional_metadata: Optional[str],
+        description: t.Optional[str],
+        additional_metadata: t.Optional[str],
         embedding: ndarray,
     ) -> "MemoryRecord":
         """Create a reference record.
@@ -79,7 +68,7 @@ class MemoryRecord:
         return MemoryRecord(
             is_reference=True,
             external_source_name=source_name,
-            id=external_id,
+            id_=external_id,
             description=description,
             text=None,
             additional_metadata=additional_metadata,
@@ -90,8 +79,8 @@ class MemoryRecord:
     def local_record(
         id: str,
         text: str,
-        description: Optional[str],
-        additional_metadata: Optional[str],
+        description: t.Optional[str],
+        additional_metadata: t.Optional[str],
         embedding: ndarray,
     ) -> "MemoryRecord":
         """Create a local record.
@@ -109,7 +98,7 @@ class MemoryRecord:
         return MemoryRecord(
             is_reference=False,
             external_source_name=None,
-            id=id,
+            id_=id,
             description=description,
             text=text,
             additional_metadata=additional_metadata,

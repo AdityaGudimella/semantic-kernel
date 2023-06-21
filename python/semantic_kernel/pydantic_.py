@@ -1,9 +1,15 @@
 import abc
+import json
 import typing as t
 
+import numpy as np
 import pydantic as pdt
 import typing_extensions as te
+from pydantic.fields import ModelField
 from pydantic.generics import GenericModel
+from pydantic.parse import Protocol
+from pydantic.types import StrBytes
+from pydantic.utils import to_lower_camel
 
 
 class PydanticField(abc.ABC):
@@ -22,7 +28,7 @@ class PydanticField(abc.ABC):
     """
 
     @classmethod
-    def __get_validators__(cls) -> t.Iterable[t.Callable]:
+    def __get_validators__(cls) -> t.Generator[t.Callable[..., t.Any], None, None]:
         """Gets the validators for the class."""
         yield cls.no_op_validate
 
@@ -37,7 +43,13 @@ class PydanticField(abc.ABC):
 
     @classmethod
     def parse_raw(
-        cls: t.Type[te.Self], b: bytes, *, content_type: t.Optional[str] = None
+        cls: t.Type[te.Self],
+        b: StrBytes,
+        *,
+        content_type: str = None,
+        encoding: str = "utf8",
+        proto: Protocol = None,
+        allow_pickle: bool = False,
     ) -> te.Self:
         """Parse a raw byte string into a model."""
         return cls()
@@ -45,6 +57,7 @@ class PydanticField(abc.ABC):
 
 _JSON_ENCODERS: t.Final[t.Dict[t.Type[t.Any], t.Callable[[t.Any], str]]] = {
     PydanticField: lambda v: v.json(),
+    np.ndarray: lambda v: json.dumps(v.tolist()),
 }
 
 
@@ -55,6 +68,15 @@ class SKBaseModel(pdt.BaseModel):
         """Pydantic configuration."""
 
         json_encoders = _JSON_ENCODERS
+        # Prevent mutation of models after they are created.
+        # This seems to be the default behavior in SemanticKernel
+        allow_mutation = False
+        # See the `allow_population_by_field_name` section of
+        # https://docs.pydantic.dev/latest/usage/model_config/#options
+        allow_population_by_field_name = True
+        # Alias `snake_case`d to lowerCamelCase
+        # Eg: `external_source_name` -> `externalSourceName`
+        alias_generator = to_lower_camel
 
 
 class SKGenericModel(GenericModel):
@@ -64,3 +86,60 @@ class SKGenericModel(GenericModel):
         """Pydantic configuration."""
 
         json_encoders = _JSON_ENCODERS
+        # Prevent mutation of models after they are created.
+        # This seems to be the default behavior in SemanticKernel
+        allow_mutation = False
+
+
+ShapeT = t.TypeVar("ShapeT")
+DTypeT = t.TypeVar("DTypeT")
+
+
+class PydanticNDArray(PydanticField, np.ndarray[ShapeT, np.dtype[DTypeT]]):
+    """Use this only to annotate numpy arrays in pydantic models."""
+
+    @classmethod
+    def __modify_schema__(
+        cls, field_schema: dict[str, t.Any], field: t.Optional[ModelField]
+    ) -> None:
+        if field and field.sub_fields:
+            type_with_potential_subtype = f"np.ndarray[{field.sub_fields[0]}]"
+        else:
+            type_with_potential_subtype = "np.ndarray"
+        # Originally: field_schema.update({"type": type_with_potential_subtype})
+        field_schema["type"] = type_with_potential_subtype
+
+    @classmethod
+    def __get_validators__(cls) -> t.Generator[t.Callable[..., t.Any], None, None]:
+        """Gets the validators for the class."""
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: t.Any) -> t.Any:
+        """Does no validation, just returns the value."""
+        if isinstance(v, str):
+            v = json.loads(v)
+        if not isinstance(v, np.ndarray):
+            try:
+                v = np.asarray(v)
+            except Exception as e:
+                raise ValueError(f"Could not convert {v} to a numpy array.") from e
+        return v
+
+    def json(self) -> str:
+        return json.dumps(self.tolist())
+
+    @classmethod
+    def parse_raw(
+        cls: t.Type[te.Self],
+        b: StrBytes,
+        *,
+        content_type: str = None,
+        encoding: str = "utf8",
+        proto: Protocol = None,
+        allow_pickle: bool = False,
+    ) -> te.Self:
+        """Parse a raw byte string into a model."""
+        if isinstance(b, bytes):
+            return cls(np.asarray(json.loads(b.decode("utf-8"))))
+        return cls(np.asarray(json.loads(b)))

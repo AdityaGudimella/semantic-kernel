@@ -132,7 +132,9 @@ class CodeBlock(Block, CodeRenderer):
         return result.result
 
     def _get_function_from_skill_collection(
-        self, skills: ReadOnlySkillCollection[SkillCollectionsT], f_block: FunctionIdBlock
+        self,
+        skills: ReadOnlySkillCollection[SkillCollectionsT],
+        f_block: FunctionIdBlock,
     ) -> Optional[SKFunctionBase]:
         if not f_block.skill_name and skills.has_function(None, f_block.function_name):
             return skills.get_function(None, f_block.function_name)
