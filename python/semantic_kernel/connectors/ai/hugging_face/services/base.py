@@ -1,5 +1,3 @@
-import typing as t
-
 import pydantic as pdt
 
 from semantic_kernel.logging_ import NullLogger, SKLogger
