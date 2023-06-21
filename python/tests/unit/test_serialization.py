@@ -1,6 +1,5 @@
 """Test serialization of SK Kernel."""
 import contextlib
-import math
 import sys
 import typing as t
 

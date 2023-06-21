@@ -1,5 +1,4 @@
 """Tests for `semantic_kernel.settings`."""
-import asyncio
 from logging import getLevelName
 
 import numpy as np
@@ -11,7 +10,7 @@ from semantic_kernel.connectors.ai.open_ai.services.azure_text_embedding import 
 from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding import (
     OpenAITextEmbedding,
 )
-from semantic_kernel.settings import KernelSettings, OpenAISettings, load_settings
+from semantic_kernel.settings import KernelSettings, load_settings
 
 
 def test_load_settings() -> None:
