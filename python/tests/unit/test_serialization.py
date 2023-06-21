@@ -62,6 +62,7 @@ from semantic_kernel.kernel import Kernel
 from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
+from semantic_kernel.memory.null_memory import NullMemory
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.delegate_handlers import DelegateHandlers
@@ -199,6 +200,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         HttpSkill,
         MathSkill,
         MemoryStoreBase,
+        NullMemory,
         PromptTemplatingEngine,
         RetryMechanismBase,
         SemanticTextMemoryBase,

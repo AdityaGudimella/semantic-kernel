@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Optional
 
 from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.pydantic_ import PydanticField
 
 
-class SemanticTextMemoryBase(PydanticField, ABC):
+class SemanticTextMemoryBase(PydanticField):
     @abstractmethod
     async def save_information_async(
         self,
