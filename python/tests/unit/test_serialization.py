@@ -65,6 +65,7 @@ from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.null_memory import NullMemory
 from semantic_kernel.memory.semantic_text_memory import SemanticTextMemory
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
+from semantic_kernel.memory.volatile_memory_store import VolatileMemoryStore
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.delegate_handlers import DelegateHandlers
 from semantic_kernel.orchestration.delegate_inference import DelegateInference
@@ -317,6 +318,7 @@ def serializable(
         ),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
+        VolatileMemoryStore: VolatileMemoryStore(),
     }
     return cls_obj_map[serializable_type]
 
@@ -398,6 +400,9 @@ def _recursive_eq(
     [
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
         # Kernel,
+        AzureChatCompletion,
+        AzureTextCompletion,
+        AzureTextEmbedding,
         Block,
         ChatPromptTemplate,
         ChatRequestSettings,
@@ -427,9 +432,7 @@ def _recursive_eq(
         SemanticTextMemory,
         SkillCollection,
         TemplateTokenizer,
-        AzureChatCompletion,
-        AzureTextCompletion,
-        AzureTextEmbedding,
+        VolatileMemoryStore,
     ],
 )
 def test_serialization(serializable: _Serializable) -> None:
