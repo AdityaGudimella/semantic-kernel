@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
+import typing as t
 from pathlib import Path
 
 from semantic_kernel import core_skills, memory
@@ -26,8 +27,9 @@ from semantic_kernel.settings import (
 
 __version__ = "0.2.8.dev"
 
-REPO_ROOT = Path(__file__).parent.parent.parent
-PYTHON_REPO_ROOT = REPO_ROOT / "python"
+REPO_ROOT: t.Final[Path] = Path(__file__).parent.parent.parent
+PYTHON_REPO_ROOT: t.Final[Path] = REPO_ROOT / "python"
+PYTHON_PACKAGE_ROOT: t.Final[Path] = PYTHON_REPO_ROOT / "semantic_kernel"
 
 __all__ = [
     "Kernel",

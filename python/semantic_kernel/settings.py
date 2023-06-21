@@ -111,7 +111,7 @@ class AzureOpenAISettings(SKBaseSettings):
     _openai_settings: OpenAISettings = pdt.PrivateAttr()
     _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
 
-    @pdt.validator("endpoint")
+    @pdt.validator("endpoint", allow_reuse=True)
     def validate_endpoint(cls, v: str) -> str:
         """Validate the endpoint."""
         if not v.startswith("https://"):

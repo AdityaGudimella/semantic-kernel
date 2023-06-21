@@ -136,13 +136,25 @@ class Kernel(SKGenericModel, Generic[SkillCollectionsT]):
         description="The retry mechanism that is used by the kernel.",
     )
 
-    @pdt.validator("skill_collection", pre=True)
+    @pdt.validator(
+        "skill_collection",
+        pre=True,
+        # NOTE: `allow_reuse` is required because SkillCollectionsT defines it's own
+        # validator.
+        allow_reuse=True,
+    )
     def skill_collection_validator(cls, v: Any, **kwargs) -> SkillCollectionBase:
         """Validate the skill collection."""
         assert kwargs.get("logger") is not None
         return SkillCollection(logger=kwargs["logger"]) if v is None else v
 
-    @pdt.validator("prompt_template_engine", pre=True)
+    @pdt.validator(
+        "prompt_template_engine",
+        pre=True,
+        # NOTE: `allow_reuse` is required because PromptTemplatingEngine defines it's
+        # own validator.
+        allow_reuse=True,
+    )
     def prompt_template_engine_validator(
         cls, v: Any, **kwargs: Any
     ) -> PromptTemplateEngine:
