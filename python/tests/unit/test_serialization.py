@@ -63,6 +63,7 @@ from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.null_memory import NullMemory
+from semantic_kernel.memory.semantic_text_memory import SemanticTextMemory
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.delegate_handlers import DelegateHandlers
@@ -308,6 +309,12 @@ def serializable(
             template_engine=PromptTemplateEngine(),
             prompt_config=PromptTemplateConfig(),
         ),
+        SemanticTextMemory: SemanticTextMemory(
+            storage=ChromaMemoryStore(),
+            embeddings_generator=OpenAITextEmbedding(
+                model_id="text-embedding-ada-002", settings=kernel_settings.openai
+            ),
+        ),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
     }
@@ -347,7 +354,11 @@ def _recursive_eq(
         exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, pdt.SecretField, dict)
     ):
         pytest.fail(f"Expected: {exp}, but got: {act}")
-    if isinstance(exp, pdt.SecretField) and isinstance(act, pdt.SecretField):
+    if isinstance(exp, pdt.SecretField):
+        if not isinstance(act, (str, type(exp))):
+            pytest.fail(
+                f"Expected object of type {type(exp)}, but got object of type {type(act)}"
+            )
         # Pydantic `SecretField` objects are not serialized, and so should not be
         # compared for equality.
         return True
@@ -413,6 +424,7 @@ def _recursive_eq(
                 reason="WeaviateMemoryStore only supported on Linux",
             ),
         ),
+        SemanticTextMemory,
         SkillCollection,
         TemplateTokenizer,
         AzureChatCompletion,

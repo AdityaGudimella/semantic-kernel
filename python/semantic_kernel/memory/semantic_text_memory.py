@@ -2,6 +2,8 @@
 
 from typing import List, Optional
 
+import pydantic as pdt
+
 from semantic_kernel.connectors.ai.embeddings.embedding_generator_base import (
     EmbeddingGeneratorBase,
 )
@@ -9,27 +11,16 @@ from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
+from semantic_kernel.pydantic_ import SKBaseModel
 
 
-class SemanticTextMemory(SemanticTextMemoryBase):
-    _storage: MemoryStoreBase
-    _embeddings_generator: EmbeddingGeneratorBase
-
-    def __init__(
-        self, storage: MemoryStoreBase, embeddings_generator: EmbeddingGeneratorBase
-    ) -> None:
-        """Initialize a new instance of SemanticTextMemory.
-
-        Arguments:
-            storage {MemoryStoreBase} -- The MemoryStoreBase to use for storage.
-            embeddings_generator {EmbeddingGeneratorBase} -- The EmbeddingGeneratorBase
-                to use for generating embeddings.
-
-        Returns:
-            None -- None.
-        """
-        self._storage = storage
-        self._embeddings_generator = embeddings_generator
+class SemanticTextMemory(SKBaseModel, SemanticTextMemoryBase):
+    storage: MemoryStoreBase = pdt.Field(
+        description="The MemoryStoreBase to use for storage."
+    )
+    embeddings_generator: EmbeddingGeneratorBase = pdt.Field(
+        description="The EmbeddingGeneratorBase to use for generating embeddings."
+    )
 
     async def save_information_async(
         self,
