@@ -13,6 +13,15 @@ from semantic_kernel.connectors.ai.chat_request_settings import ChatRequestSetti
 from semantic_kernel.connectors.ai.complete_request_settings import (
     CompleteRequestSettings,
 )
+from semantic_kernel.connectors.ai.embeddings.embedding_generator_base import (
+    EmbeddingGeneratorBase,
+)
+from semantic_kernel.connectors.ai.hugging_face.services.hf_text_completion import (
+    HuggingFaceTextCompletion,
+)
+from semantic_kernel.connectors.ai.hugging_face.services.hf_text_embedding import (
+    HuggingFaceTextEmbedding,
+)
 from semantic_kernel.connectors.ai.open_ai.services.azure_chat_completion import (
     AzureChatCompletion,
 )
@@ -177,6 +186,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         ChatCompletionClientBase,
         DelegateHandlers,
         DelegateInference,
+        EmbeddingGeneratorBase,
         FileIOSkill,
         HttpSkill,
         MathSkill,
@@ -259,6 +269,12 @@ def serializable(
         CodeRenderer: CodeRenderer(),
         CompleteRequestSettings: CompleteRequestSettings(),
         ContextVariables: ContextVariables(),
+        HuggingFaceTextCompletion: HuggingFaceTextCompletion(
+            model_id="EleutherAI/gpt-neo-2.7B"
+        ),
+        HuggingFaceTextEmbedding: HuggingFaceTextEmbedding(
+            model_id="EleutherAI/gpt-neo-2.7B"
+        ),
         Kernel: Kernel(),
         OpenAITextCompletion: OpenAITextCompletion(
             model_id="text-davinci-003", settings=kernel_settings.openai
@@ -358,6 +374,8 @@ def _recursive_eq(
         CodeTokenizer,
         CompleteRequestSettings,
         ContextVariables,
+        HuggingFaceTextCompletion,
+        HuggingFaceTextEmbedding,
         OpenAIChatCompletion,
         OpenAITextCompletion,
         OpenAITextEmbedding,
