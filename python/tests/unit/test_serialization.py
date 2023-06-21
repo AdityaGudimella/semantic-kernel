@@ -59,6 +59,7 @@ from semantic_kernel.core_skills.text_memory_skill import TextMemorySkill
 from semantic_kernel.core_skills.text_skill import TextSkill
 from semantic_kernel.core_skills.time_skill import TimeSkill
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
@@ -284,6 +285,10 @@ def serializable(
         ),
         Kernel: Kernel(),
         MemoryRecord: MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
+        MemoryQueryResult: MemoryQueryResult.from_memory_record(
+            MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
+            relevance=0.9,
+        ),
         OpenAITextCompletion: OpenAITextCompletion(
             model_id="text-davinci-003", settings=kernel_settings.openai
         ),
