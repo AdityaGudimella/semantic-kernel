@@ -1,4 +1,3 @@
-import typing as t
 import warnings
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
