@@ -39,8 +39,12 @@ from semantic_kernel.skill_definition.read_only_skill_collection import (
 
 
 class SKFunction(SKFunctionBase, Generic[SkillCollectionsT]):
-    """
-    Semantic Kernel function.
+    """Semantic Kernel function.
+
+    IMPORTANT:
+        This class cannot be serialized. Even if it is serialized, it cannot be
+        used across language boundaries. It is only meant to be used within the
+        same session.
     """
 
     _parameters: List[ParameterView]
