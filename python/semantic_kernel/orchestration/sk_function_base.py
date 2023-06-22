@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, Callable, Optional
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     )
 
 
-class SKFunctionBase(PydanticField, ABC):
+class SKFunctionBase(PydanticField):
     FUNCTION_PARAM_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     FUNCTION_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     SKILL_NAME_REGEX = r"^[0-9A-Za-z_]*$"
