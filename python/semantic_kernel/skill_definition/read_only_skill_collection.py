@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     )
 
 
-SkillCollectionsT = t.TypeVar("SkillCollectionsT", bound="SkillCollectionBase")
+SkillCollectionT = t.TypeVar("SkillCollectionT", bound="SkillCollectionBase")
 
 
-class ReadOnlySkillCollection(SKGenericModel, t.Generic[SkillCollectionsT]):
-    _skill_collection: SkillCollectionsT = pdt.Field(
+class ReadOnlySkillCollection(SKGenericModel, t.Generic[SkillCollectionT]):
+    _skill_collection: SkillCollectionT = pdt.Field(
         alias="skill_collection", description="The skill collection."
     )
 

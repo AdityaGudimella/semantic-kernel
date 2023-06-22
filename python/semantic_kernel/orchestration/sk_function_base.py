@@ -20,7 +20,7 @@ from semantic_kernel.skill_definition.function_view import FunctionView
 if TYPE_CHECKING:
     from semantic_kernel.skill_definition.read_only_skill_collection import (
         ReadOnlySkillCollection,
-        SkillCollectionsT,
+        SkillCollectionT,
     )
 
 
@@ -154,7 +154,7 @@ class SKFunctionBase(PydanticField):
     @abstractmethod
     def set_default_skill_collection(
         self,
-        skills: "ReadOnlySkillCollection[SkillCollectionsT]",
+        skills: "ReadOnlySkillCollection[SkillCollectionT]",
     ) -> "SKFunctionBase":
         """
         Sets the skill collection to use when the function is

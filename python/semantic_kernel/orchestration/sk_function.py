@@ -34,11 +34,11 @@ from semantic_kernel.skill_definition.function_view import FunctionView
 from semantic_kernel.skill_definition.parameter_view import ParameterView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
-    SkillCollectionsT,
+    SkillCollectionT,
 )
 
 
-class SKFunction(SKFunctionBase, Generic[SkillCollectionsT]):
+class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
     """Semantic Kernel function.
 
     IMPORTANT:
@@ -50,7 +50,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionsT]):
     _parameters: List[ParameterView]
     _delegate_type: DelegateTypes
     _function: Callable[..., Any]
-    _skill_collection: Optional[ReadOnlySkillCollection[SkillCollectionsT]]
+    _skill_collection: Optional[ReadOnlySkillCollection[SkillCollectionT]]
     _log: Logger
     _ai_service: Optional[TextCompletionClientBase]
     _ai_request_settings: CompleteRequestSettings
@@ -209,7 +209,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionsT]):
         self._chat_request_settings = ChatRequestSettings()
 
     def set_default_skill_collection(
-        self, skills: ReadOnlySkillCollection[SkillCollectionsT]
+        self, skills: ReadOnlySkillCollection[SkillCollectionT]
     ) -> "SKFunction":
         self._skill_collection = skills
         return self

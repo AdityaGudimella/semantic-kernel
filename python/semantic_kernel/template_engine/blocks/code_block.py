@@ -8,7 +8,7 @@ import pydantic as pdt
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
-    SkillCollectionsT,
+    SkillCollectionT,
 )
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
@@ -133,7 +133,7 @@ class CodeBlock(Block, CodeRenderer):
 
     def _get_function_from_skill_collection(
         self,
-        skills: ReadOnlySkillCollection[SkillCollectionsT],
+        skills: ReadOnlySkillCollection[SkillCollectionT],
         f_block: FunctionIdBlock,
     ) -> Optional[SKFunctionBase]:
         if not f_block.skill_name and skills.has_function(None, f_block.function_name):

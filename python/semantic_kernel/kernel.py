@@ -48,7 +48,7 @@ from semantic_kernel.semantic_functions.semantic_function_config import (
 )
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
-    SkillCollectionsT,
+    SkillCollectionT,
 )
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
 from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
@@ -106,12 +106,12 @@ class DefaultServices(SKBaseModel):
     )
 
 
-class Kernel(SKGenericModel, Generic[SkillCollectionsT]):
+class Kernel(SKGenericModel, Generic[SkillCollectionT]):
     logger: SKLogger = pdt.Field(
         default_factory=NullLogger,
         description="The logger that is used by the kernel.",
     )
-    skill_collection: SkillCollectionsT = pdt.Field(
+    skill_collection: SkillCollectionT = pdt.Field(
         default=None,
         description="The skill collection that contains all the skills that are loaded into the kernel.",  # noqa: E501
     )

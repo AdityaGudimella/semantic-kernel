@@ -72,6 +72,7 @@ from semantic_kernel.orchestration.delegate_inference import DelegateInference
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
+from semantic_kernel.planning.plan import Plan
 from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
@@ -79,6 +80,7 @@ from semantic_kernel.reliability.pass_through_without_retry import (
 from semantic_kernel.reliability.retry_mechanism_base import RetryMechanismBase
 from semantic_kernel.semantic_functions.chat_prompt_template import ChatPromptTemplate
 from semantic_kernel.semantic_functions.prompt_template import PromptTemplate
+from semantic_kernel.semantic_functions.prompt_template_base import PromptTemplateBase
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
 )
@@ -207,6 +209,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         MathSkill,
         MemoryStoreBase,
         NullMemory,
+        PromptTemplateBase,
         PromptTemplatingEngine,
         RetryMechanismBase,
         SemanticTextMemoryBase,
@@ -307,6 +310,21 @@ def serializable(
             model_id="text-embedding-ada-002", settings=kernel_settings.openai
         ),
         PassThroughWithoutRetry: PassThroughWithoutRetry(),
+        Plan: Plan(
+            goal="goal",
+            prompt="prompt",
+            generated_plan=SKContext(
+                variables=ContextVariables(),
+                memory=SemanticTextMemory(
+                    storage=ChromaMemoryStore(),
+                    embeddings_generator=OpenAITextEmbedding(
+                        model_id="text-embedding-ada-002",
+                        settings=kernel_settings.openai,
+                    ),
+                ),
+                skill_collection=SkillCollection().read_only_skill_collection,
+            ),
+        ),
         PromptTemplateConfig: PromptTemplateConfig(),
         PromptTemplateEngine: PromptTemplateEngine(),
         PromptTemplate: PromptTemplate(
@@ -434,6 +452,7 @@ def _recursive_eq(
         OpenAITextCompletion,
         OpenAITextEmbedding,
         PassThroughWithoutRetry,
+        Plan,
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,

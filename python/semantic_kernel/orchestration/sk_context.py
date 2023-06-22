@@ -11,16 +11,16 @@ from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.pydantic_ import SKGenericModel
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
-    SkillCollectionsT,
+    SkillCollectionT,
 )
 
 
-class SKContext(SKGenericModel, Generic[SkillCollectionsT]):
+class SKContext(SKGenericModel, Generic[SkillCollectionT]):
     """Semantic Kernel context."""
 
     variables: ContextVariables = pdt.Field(description="The context variables.")
     memory: SemanticTextMemoryBase = pdt.Field(description="The semantic text memory.")
-    skill_collection: ReadOnlySkillCollection[SkillCollectionsT] = pdt.Field(
+    skill_collection: ReadOnlySkillCollection[SkillCollectionT] = pdt.Field(
         description="The skill collection."
     )
     _error_occurred: bool = pdt.Field(
