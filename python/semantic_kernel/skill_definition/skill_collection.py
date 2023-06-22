@@ -28,7 +28,9 @@ class SkillCollection(SKBaseModel, SkillCollectionBase):
 
     def __init__(self: Self, **kwags: Any) -> None:
         super().__init__(**kwags)
-        self._read_only_skill_collection = ReadOnlySkillCollection(self)
+        self._read_only_skill_collection = ReadOnlySkillCollection(
+            skill_collection=self
+        )
 
     @property
     def read_only_skill_collection(

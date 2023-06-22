@@ -69,6 +69,7 @@ from semantic_kernel.memory.volatile_memory_store import VolatileMemoryStore
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.delegate_handlers import DelegateHandlers
 from semantic_kernel.orchestration.delegate_inference import DelegateInference
+from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
 from semantic_kernel.pydantic_ import PydanticField
@@ -83,6 +84,9 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 )
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
+from semantic_kernel.skill_definition.read_only_skill_collection import (
+    ReadOnlySkillCollection,
+)
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
 from semantic_kernel.skill_definition.skill_collection_base import SkillCollectionBase
 from semantic_kernel.template_engine.blocks.block import Block
@@ -310,11 +314,22 @@ def serializable(
             template_engine=PromptTemplateEngine(),
             prompt_config=PromptTemplateConfig(),
         ),
+        ReadOnlySkillCollection: SkillCollection().read_only_skill_collection,
         SemanticTextMemory: SemanticTextMemory(
             storage=ChromaMemoryStore(),
             embeddings_generator=OpenAITextEmbedding(
                 model_id="text-embedding-ada-002", settings=kernel_settings.openai
             ),
+        ),
+        SKContext: SKContext(
+            variables=ContextVariables(),
+            memory=SemanticTextMemory(
+                storage=ChromaMemoryStore(),
+                embeddings_generator=OpenAITextEmbedding(
+                    model_id="text-embedding-ada-002", settings=kernel_settings.openai
+                ),
+            ),
+            skill_collection=SkillCollection().read_only_skill_collection,
         ),
         SkillCollection: SkillCollection(),
         TemplateTokenizer: TemplateTokenizer(),
@@ -422,6 +437,12 @@ def _recursive_eq(
         PromptTemplateConfig,
         PromptTemplateEngine,
         PromptTemplate,
+        ReadOnlySkillCollection,
+        SemanticTextMemory,
+        SKContext,
+        SkillCollection,
+        TemplateTokenizer,
+        VolatileMemoryStore,
         pytest.param(
             WeaviateMemoryStore,
             marks=pytest.mark.skipif(
@@ -429,10 +450,6 @@ def _recursive_eq(
                 reason="WeaviateMemoryStore only supported on Linux",
             ),
         ),
-        SemanticTextMemory,
-        SkillCollection,
-        TemplateTokenizer,
-        VolatileMemoryStore,
     ],
 )
 def test_serialization(serializable: _Serializable) -> None:

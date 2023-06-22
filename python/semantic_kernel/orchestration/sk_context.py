@@ -1,49 +1,43 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from typing import Any, Generic, Literal, Optional, Tuple, Union
 
+import pydantic as pdt
+
 from semantic_kernel.kernel_exception import KernelException
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
+from semantic_kernel.pydantic_ import SKGenericModel
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
     SkillCollectionsT,
 )
 
 
-class SKContext(Generic[SkillCollectionsT]):
+class SKContext(SKGenericModel, Generic[SkillCollectionsT]):
     """Semantic Kernel context."""
 
-    _error_occurred: bool = False
-    _last_exception: Optional[Exception] = None
-    _last_error_description: str = ""
-    _logger: Logger
-    _memory: SemanticTextMemoryBase
-    _skill_collection: ReadOnlySkillCollection[SkillCollectionsT]
-    _variables: ContextVariables
-
-    def __init__(
-        self,
-        variables: ContextVariables,
-        memory: SemanticTextMemoryBase,
-        skill_collection: ReadOnlySkillCollection[SkillCollectionsT],
-        logger: Logger,
-        # TODO: cancellation token?
-    ) -> None:
-        """
-        Initializes a new instance of the SKContext class.
-
-        Arguments:
-            variables {ContextVariables} -- The context variables.
-            memory {SemanticTextMemoryBase} -- The semantic text memory.
-            skill_collection {ReadOnlySkillCollection} -- The skill collection.
-            logger {Logger} -- The logger.
-        """
-        self._variables = variables
-        self._memory = memory
-        self._skill_collection = skill_collection
-        self._logger = logger
+    variables: ContextVariables = pdt.Field(description="The context variables.")
+    memory: SemanticTextMemoryBase = pdt.Field(description="The semantic text memory.")
+    skill_collection: ReadOnlySkillCollection[SkillCollectionsT] = pdt.Field(
+        description="The skill collection."
+    )
+    _error_occurred: bool = pdt.Field(
+        default=False,
+        description="Whether an error occurred while executing functions in the pipeline.",
+    )
+    _last_exception: Optional[Exception] = pdt.Field(
+        default=None,
+        description="When an error occurs, this is the most recent exception.",
+    )
+    _last_error_description: str = pdt.Field(
+        default="",
+        description="The last error description.",
+    )
+    _logger: SKLogger = pdt.PrivateAttr(
+        default_factory=NullLogger,
+    )
 
     def fail(self, error_description: str, exception: Optional[Exception] = None):
         """
@@ -72,91 +66,9 @@ class SKContext(Generic[SkillCollectionsT]):
         """
         return str(self._variables)
 
-    @property
-    def error_occurred(self) -> bool:
-        """
-        Whether an error occurred while executing functions in the pipeline.
-
-        Returns:
-            bool -- Whether an error occurred.
-        """
-        return self._error_occurred
-
-    @property
-    def last_error_description(self) -> str:
-        """
-        The last error description.
-
-        Returns:
-            str -- The last error description.
-        """
-        return self._last_error_description
-
-    @property
-    def last_exception(self) -> Optional[Exception]:
-        """
-        When an error occurs, this is the most recent exception.
-
-        Returns:
-            Exception -- The most recent exception.
-        """
-        return self._last_exception
-
-    @property
-    def variables(self) -> ContextVariables:
-        """
-        User variables.
-
-        Returns:
-            ContextVariables -- The context variables.
-        """
-        return self._variables
-
-    @variables.setter
-    def variables(self, value: ContextVariables) -> None:
-        """Set the value of variables."""
-        self._variables = value
-
-    @property
-    def memory(self) -> SemanticTextMemoryBase:
-        """
-        The semantic text memory.
-
-        Returns:
-            SemanticTextMemoryBase -- The semantic text memory.
-        """
-        return self._memory
-
-    @property
-    def skills(self) -> ReadOnlySkillCollection[SkillCollectionsT]:
-        """
-        Read only skills collection.
-
-        Returns:
-            ReadOnlySkillCollection[SkillCollectionsT] -- The skills collection.
-        """
-        return self._skill_collection
-
-    @skills.setter
-    def skills(self, value: ReadOnlySkillCollection[SkillCollectionsT]) -> None:
-        """
-        Set the value of skills collection
-        """
-        self._skill_collection = value
-
-    @property
-    def log(self) -> Logger:
-        """
-        The logger.
-
-        Returns:
-            Logger -- The logger.
-        """
-        return self._logger
-
+    # TODO(ADI): Why use `__setitem__`? Do we expect to use this class as a dictionary?
     def __setitem__(self, key: str, value: Any) -> None:
-        """
-        Sets a context variable.
+        """Sets a context variable.
 
         Arguments:
             key {str} -- The variable name.
@@ -177,10 +89,13 @@ class SKContext(Generic[SkillCollectionsT]):
         return self._variables[key]
 
     def func(self, skill_name: str, function_name: str):
-        """
-        Access registered functions by skill + name. Not case sensitive.
-        The function might be native or semantic, it's up to the caller
-        handling it.
+        """Access registered functions by skill + name.
+
+        IMPORTANT:
+            Not case sensitive.
+
+        IMPORTANT:
+            The function might be native or semantic, it's up to the caller handling it.
 
         Arguments:
             skill_name {str} -- The skill name.
