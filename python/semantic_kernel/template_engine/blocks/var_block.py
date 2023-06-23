@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from re import match as re_match
-from typing import Optional, Tuple
+import re
+import warnings
+from typing import Any, Optional, Tuple
+
+import pydantic as pdt
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block import Block
@@ -12,41 +14,45 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class VarBlock(Block, TextRenderer):
-    def __init__(self, content: Optional[str] = None, log: Optional[Logger] = None):
-        super().__init__(content=content and content.strip(), log=log)
+    _name: str = pdt.PrivateAttr(default=None)
 
-        if len(self.content) < 2:
-            err = "The variable name is empty"
-            self.logger.error(err)
-            self.name = ""
-            return
+    @pdt.validator("content")
+    def _validate_content(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            raise TypeError("content must be a string")
+        if len(v) < 2:
+            warning = (
+                f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
+                + " and have a name"
+            )
+        elif v[0] != Symbols.VAR_PREFIX:
+            warning = f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
+        else:
+            return v
+        warnings.warn(warning)
+        return v.strip()
 
-        self.name = self.content[1:]
+    @property
+    def name(self) -> str:
+        if self._name is None:
+            if len(self.content) < 2:
+                warnings.warn("The variable name is empty")
+                self._name = ""
+            else:
+                self._name = self.content[1:]
+        return self._name
 
     @property
     def type(self) -> BlockTypes:
         return BlockTypes.VARIABLE
 
     def is_valid(self) -> Tuple[bool, str]:
-        if not self.content:
-            error_msg = (
-                f"A variable must start with the symbol {Symbols.VAR_PREFIX} "
-                "and have a name"
-            )
-            self.logger.error(error_msg)
-            return False, error_msg
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if not self._validate_content(self.content):
+                return False, ""
 
-        if self.content[0] != Symbols.VAR_PREFIX:
-            error_msg = f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
-            self.logger.error(error_msg)
-            return False, error_msg
-
-        if len(self.content) < 2:
-            error_msg = "The variable name is empty"
-            self.logger.error(error_msg)
-            return False, error_msg
-
-        if not re_match(r"^[a-zA-Z0-9_]*$", self.name):
+        if not re.match(r"^[a-zA-Z0-9_]*$", self.name):
             error_msg = (
                 f"The variable name '{self.name}' contains invalid characters. "
                 "Only alphanumeric chars and underscore are allowed."

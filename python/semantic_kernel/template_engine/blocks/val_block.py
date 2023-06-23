@@ -36,7 +36,7 @@ class ValBlock(Block, TextRenderer):
             return v
         error_msg += f": {v}"
         warnings.warn(error_msg)
-        return ""
+        return v.strip()
 
     def __init__(self, **data: Any):
         super().__init__(**data)
