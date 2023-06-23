@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from typing import Optional, Tuple
+import contextlib
+import warnings
+from typing import Any, Optional, Tuple
+
+import pydantic as pdt
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block import Block
@@ -11,45 +14,47 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class ValBlock(Block, TextRenderer):
-    def __init__(self, content: Optional[str] = None, log: Optional[Logger] = None):
-        super().__init__(content=content and content.strip(), log=log)
+    _first: str = pdt.PrivateAttr(default="\0")
+    _last: str = pdt.PrivateAttr(default="\0")
+    _value: str = pdt.PrivateAttr(default="")
 
-        if len(self.content) < 2:
-            err = "A value must have single quotes or double quotes on both sides"
-            self.logger.error(err)
-            self._value = ""
-            self._first = "\0"
-            self._last = "\0"
-            return
+    @pdt.validator("content")
+    def _validate_content(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            raise TypeError("content must be a string")
+        if len(v) < 2:
+            error_msg = "A value must have single quotes or double quotes on both sides"
+        elif v[0] not in (Symbols.DBL_QUOTE, Symbols.SGL_QUOTE):
+            error_msg = (
+                "A value must be wrapped in either single quotes or double quotes"
+            )
+        elif v[0] != v[-1]:
+            error_msg = (
+                "Cannot mix single quotes and double quotes in a value definition"
+            )
+        else:
+            return v
+        error_msg += f": {v}"
+        warnings.warn(error_msg)
+        return ""
 
-        self._first = self.content[0]
-        self._last = self.content[-1]
-        self._value = self.content[1:-1]
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+
+        with contextlib.suppress(IndexError):
+            self._first = self.content[0]
+            self._last = self.content[-1]
+            self._value = self.content[1:-1]
 
     @property
     def type(self) -> BlockTypes:
         return BlockTypes.VALUE
 
     def is_valid(self) -> Tuple[bool, str]:
-        if len(self.content) < 2:
-            error_msg = "A value must have single quotes or double quotes on both sides"
-            self.logger.error(error_msg)
-            return False, error_msg
-
-        if self._first != Symbols.DBL_QUOTE and self._first != Symbols.SGL_QUOTE:
-            error_msg = (
-                "A value must be wrapped in either single quotes or double quotes"
-            )
-            self.logger.error(error_msg)
-            return False, error_msg
-
-        if self._first != self._last:
-            error_msg = (
-                "A value must be defined using either single quotes or "
-                "double quotes, not both"
-            )
-            self.logger.error(error_msg)
-            return False, error_msg
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            if not self._validate_content(self.content):
+                return False, ""
 
         return True, ""
 
@@ -61,5 +66,5 @@ class ValBlock(Block, TextRenderer):
         return (
             text is not None
             and len(text) > 0
-            and (text[0] == Symbols.DBL_QUOTE or text[0] == Symbols.SGL_QUOTE)
+            and text[0] in (Symbols.DBL_QUOTE, Symbols.SGL_QUOTE)
         )

@@ -104,6 +104,7 @@ from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
 from semantic_kernel.template_engine.blocks.symbols import Symbols
 from semantic_kernel.template_engine.blocks.text_block import TextBlock
+from semantic_kernel.template_engine.blocks.val_block import ValBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
@@ -396,6 +397,7 @@ def serializable(
         SKLogger: SKLogger(settings=kernel_settings.logging),
         TemplateTokenizer: TemplateTokenizer(),
         TextBlock: TextBlock.from_text("foo", 0, 2),
+        ValBlock: ValBlock(content="'foo'"),
         VolatileMemoryStore: VolatileMemoryStore(),
     }
     return cls_obj_map[serializable_type]
@@ -515,6 +517,7 @@ def _recursive_eq(
         SkillCollection,
         TemplateTokenizer,
         TextBlock,
+        ValBlock,
         VolatileMemoryStore,
         pytest.param(
             WeaviateMemoryStore,

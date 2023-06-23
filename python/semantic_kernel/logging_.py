@@ -35,6 +35,7 @@ class LoggerSettings(pdt.BaseSettings):
         """
         logger = logging.getLogger(name)
         logger.setLevel(self.log_level)
+        logging.captureWarnings(True)
         return logger
 
 
