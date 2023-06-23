@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 
 
+# TODO(ADI): Can we get rid of this class or at least the error codes?
 class KernelException(Exception):
     class ErrorCodes(Enum):
         # Unknown error.

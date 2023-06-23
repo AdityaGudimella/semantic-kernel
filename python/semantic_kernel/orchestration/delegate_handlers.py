@@ -3,6 +3,7 @@
 
 from semantic_kernel.kernel_exception import KernelException
 from semantic_kernel.orchestration.delegate_types import DelegateTypes
+from semantic_kernel.pydantic_ import PydanticField
 
 
 def _handles(delegate_type):
@@ -13,7 +14,8 @@ def _handles(delegate_type):
     return decorator
 
 
-class DelegateHandlers:
+class DelegateHandlers(PydanticField):
+    # TODO(Adi): Why is this class needed?
     @staticmethod
     @_handles(DelegateTypes.Void)
     async def handle_void(function, context):
@@ -142,8 +144,11 @@ class DelegateHandlers:
     def get_handler(delegate_type):
         for name, value in DelegateHandlers.__dict__.items():
             wrapped = getattr(value, "__wrapped__", getattr(value, "__func__", None))
-            if name.startswith("handle_") and hasattr(wrapped, "_delegate_type"):
-                if wrapped._delegate_type == delegate_type:
-                    return value
+            if (
+                name.startswith("handle_")
+                and hasattr(wrapped, "_delegate_type")
+                and wrapped._delegate_type == delegate_type
+            ):
+                return value
 
         return DelegateHandlers.handle_unknown

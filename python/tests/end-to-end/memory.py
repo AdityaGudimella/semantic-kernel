@@ -105,7 +105,11 @@ async def chat(
 
 
 async def main() -> None:
-    kernel = sk.Kernel()
+    kernel = sk.Kernel(
+        text_completion_services=[],
+        text_embedding_generation_services=[],
+        memory_store=sk.memory.VolatileMemoryStore(),
+    )
 
     api_key, org_id = sk.openai_settings_from_dot_env()
     kernel.add_text_completion_service(

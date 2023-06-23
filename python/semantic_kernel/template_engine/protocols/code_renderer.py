@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from typing import Protocol, runtime_checkable
-
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 
 
-@runtime_checkable
-class CodeRenderer(Protocol):
+class CodeRenderer(PydanticField):
     """
     Protocol for dynamic code blocks that need async IO to be rendered.
     """
@@ -18,4 +16,9 @@ class CodeRenderer(Protocol):
         :param context: SK execution context
         :return: Rendered content
         """
-        ...
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(self, CodeRenderer):
+            return NotImplemented
+        return isinstance(__value, CodeRenderer)

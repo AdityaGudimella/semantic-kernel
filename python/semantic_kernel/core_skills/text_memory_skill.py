@@ -1,15 +1,17 @@
 # Copyright (c) Microsoft. All rights reserved.
+import typing as t
 
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition import sk_function, sk_function_context_parameter
 
 
-class TextMemorySkill:
-    COLLECTION_PARAM = "collection"
-    RELEVANCE_PARAM = "relevance"
-    KEY_PARAM = "key"
-    DEFAULT_COLLECTION = "generic"
-    DEFAULT_RELEVANCE = 0.75
+class TextMemorySkill(PydanticField):
+    COLLECTION_PARAM: t.Final[str] = "collection"
+    RELEVANCE_PARAM: t.Final[str] = "relevance"
+    KEY_PARAM: t.Final[str] = "key"
+    DEFAULT_COLLECTION: t.Final[str] = "generic"
+    DEFAULT_RELEVANCE: t.Final[str] = 0.75
 
     # @staticmethod
     @sk_function(
@@ -61,7 +63,7 @@ class TextMemorySkill:
             if context.variables.contains_key(TextMemorySkill.RELEVANCE_PARAM)
             else TextMemorySkill.DEFAULT_RELEVANCE
         )
-        if relevance is None or str(relevance).strip() == "":
+        if relevance is None or not str(relevance).strip():
             relevance = TextMemorySkill.DEFAULT_RELEVANCE
 
         results = await context.memory.search_async(

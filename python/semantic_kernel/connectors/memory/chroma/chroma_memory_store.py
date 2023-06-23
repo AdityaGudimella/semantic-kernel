@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import Any, Final, List, Optional, Tuple
 
+import pydantic as pdt
 from numpy import array, ndarray
 
 from semantic_kernel.connectors.memory.chroma.utils import (
@@ -10,29 +10,38 @@ from semantic_kernel.connectors.memory.chroma.utils import (
     chroma_compute_similarity_scores,
     query_results_to_records,
 )
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
-from semantic_kernel.utils.null_logger import NullLogger
-
-if TYPE_CHECKING:
-    import chromadb
-    import chromadb.config
-    from chromadb.api.models.Collection import Collection
+from semantic_kernel.optional_packages.chromadb import API, Collection, Settings
+from semantic_kernel.pydantic_ import SKBaseModel
 
 
-class ChromaMemoryStore(MemoryStoreBase):
-    _client: "chromadb.Client"
-    _logger: Logger
+class ChromaMemoryStore(SKBaseModel, MemoryStoreBase):
+    _DEFAULT_QUERY_INCLUDES: Final[Tuple[str, ...]] = (
+        "embeddings",
+        "metadatas",
+        "documents",
+    )
+    _DEFAULT_EMBEDDING_FUNCTION: Final[str] = "DissableChromaEmbeddingFunction"
+    persist_directory: Optional[str] = pdt.Field(
+        default=None,
+        description="Path to the directory where data will be persisted",
+    )
+    client_settings: Optional[Settings] = pdt.Field(
+        default_factory=Settings,
+        description="A Settings instance to configure the ChromaDB client",
+    )
 
-    def __init__(
-        self,
-        persist_directory: Optional[str] = None,
-        client_settings: Optional["chromadb.config.Settings"] = None,
-        logger: Optional[Logger] = None,
-    ) -> None:
-        """
-        ChromaMemoryStore provides an interface to store and retrieve data using ChromaDB.
-        Collection names with uppercase characters are not supported by ChromaDB, they will be automatically converted.
+    _client: API = pdt.PrivateAttr()
+    _logger: SKLogger = pdt.PrivateAttr(default_factory=NullLogger)
+
+    def __init__(self, **data: Any) -> None:
+        """Interface to store and retrieve data using ChromaDB.
+
+        IMPORTANT:
+            Collection names with uppercase characters are not supported by ChromaDB,
+            they will be automatically converted.
 
         Args:
             persist_directory (Optional[str], optional): Path to the directory where data will be persisted.
@@ -52,30 +61,22 @@ class ChromaMemoryStore(MemoryStoreBase):
                 )
             )
         """
+        super().__init__(**data)
         try:
             import chromadb
             import chromadb.config
 
-        except ImportError:
-            raise ValueError(
+        except ImportError as e:
+            raise ImportError(
                 "Could not import chromadb python package. "
-                "Please install it with `pip install chromadb`."
-            )
+                + "Please install it with `pip install chromadb`."
+            ) from e
 
-        if client_settings:
-            self._client_settings = client_settings
-        else:
-            self._client_settings = chromadb.config.Settings()
-            if persist_directory is not None:
-                self._client_settings = chromadb.config.Settings(
-                    chroma_db_impl="duckdb+parquet", persist_directory=persist_directory
-                )
-        self._client = chromadb.Client(self._client_settings)
-        self._persist_directory = persist_directory
-        self._default_query_includes = ["embeddings", "metadatas", "documents"]
+        if self.persist_directory:
+            self.client_settings.chroma_db_impl = "duckdb+parquet"
+            self.client_settings.persist_directory = self.persist_directory
 
-        self._logger = logger or NullLogger()
-        self._default_embedding_function = "DisableChromaEmbeddingFunction"
+        self._client = chromadb.Client(self.client_settings)
 
     async def create_collection_async(self, collection_name: str) -> None:
         """Creates a new collection in Chroma if it does not exist.
@@ -93,17 +94,15 @@ class ChromaMemoryStore(MemoryStoreBase):
             # Current version of ChromeDB reject camel case collection names.
             name=camel_to_snake(collection_name),
             # ChromaMemoryStore will get embeddings from SemanticTextMemory. Never use this.
-            embedding_function=self._default_embedding_function,
+            embedding_function=self._DEFAULT_EMBEDDING_FUNCTION,
         )
 
-    async def get_collection_async(
-        self, collection_name: str
-    ) -> Optional["Collection"]:
+    async def get_collection_async(self, collection_name: str) -> Optional[Collection]:
         try:
             # Current version of ChromeDB rejects camel case collection names.
             return self._client.get_collection(
                 name=camel_to_snake(collection_name),
-                embedding_function=self._default_embedding_function,
+                embedding_function=self._DEFAULT_EMBEDDING_FUNCTION,
             )
         except ValueError:
             return None
@@ -139,10 +138,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         Returns:
             bool -- True if the collection exists; otherwise, False.
         """
-        if await self.get_collection_async(collection_name) is None:
-            return False
-        else:
-            return True
+        return await self.get_collection_async(collection_name) is not None
 
     async def upsert_async(self, collection_name: str, record: MemoryRecord) -> str:
         """Upserts a single MemoryRecord.
@@ -156,7 +152,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         """
         collection = await self.get_collection_async(collection_name)
         if collection is None:
-            raise Exception(f"Collection '{collection_name}' does not exist")
+            raise ValueError(f"Collection '{collection_name}' does not exist")
 
         record._key = record._id
         metadata = {
@@ -211,10 +207,10 @@ class ChromaMemoryStore(MemoryStoreBase):
         records = await self.get_batch_async(collection_name, [key], with_embedding)
         try:
             return records[0]
-        except IndexError:
-            raise Exception(
+        except IndexError as e:
+            raise IndexError(
                 f"Record with key '{key}' does not exist in collection '{collection_name}'"
-            )
+            ) from e
 
     async def get_batch_async(
         self, collection_name: str, keys: List[str], with_embeddings: bool
@@ -231,7 +227,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         """
         collection = await self.get_collection_async(collection_name)
         if collection is None:
-            raise Exception(f"Collection '{collection_name}' does not exist")
+            raise ValueError(f"Collection '{collection_name}' does not exist")
 
         query_includes = (
             ["embeddings", "metadatas", "documents"]
@@ -240,8 +236,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         )
 
         value = collection.get(ids=keys, include=query_includes)
-        record = query_results_to_records(value, with_embeddings)
-        return record
+        return query_results_to_records(value, with_embeddings)
 
     async def remove_async(self, collection_name: str, key: str) -> None:
         """Removes a record.
@@ -289,7 +284,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         Returns:
             List[Tuple[MemoryRecord, float]] -- The records and their relevance scores.
         """
-        if with_embeddings is False:
+        if not with_embeddings:
             self._logger.warning(
                 "Chroma returns distance score not cosine similarity score.\
                 So embeddings are automatically queried from database for calculation."
@@ -301,7 +296,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         query_results = collection.query(
             query_embeddings=embedding.tolist(),
             n_results=limit,
-            include=self._default_query_includes,
+            include=self._DEFAULT_QUERY_INCLUDES,
         )
 
         # Convert the collection of embeddings into a numpy array (stacked)
@@ -318,13 +313,12 @@ class ChromaMemoryStore(MemoryStoreBase):
         similarity_score = chroma_compute_similarity_scores(embedding, embedding_array)
 
         # Convert query results into memory records
-        record_list = [
-            (record, distance)
-            for record, distance in zip(
+        record_list = list(
+            zip(
                 query_results_to_records(query_results, with_embeddings),
                 similarity_score,
             )
-        ]
+        )
 
         sorted_results = sorted(
             record_list,
@@ -333,9 +327,7 @@ class ChromaMemoryStore(MemoryStoreBase):
         )
 
         filtered_results = [x for x in sorted_results if x[1] >= min_relevance_score]
-        top_results = filtered_results[:limit]
-
-        return top_results
+        return filtered_results[:limit]
 
     async def get_nearest_match_async(
         self,

@@ -15,21 +15,21 @@ from semantic_kernel.core_skills.conversation_summary_skill import (
 @pytest.mark.asyncio
 async def test_azure_summarize_conversation_using_skill(
     setup_summarize_conversation_using_skill,
+    azure_openai_settings: sk.AzureOpenAISettings,
 ):
     kernel, chatTranscript = setup_summarize_conversation_using_skill
 
     if "Python_Integration_Tests" in os.environ:
         deployment_name = os.environ["AzureOpenAI__DeploymentName"]
-        api_key = os.environ["AzureOpenAI__ApiKey"]
-        endpoint = os.environ["AzureOpenAI__Endpoint"]
     else:
-        # Load credentials from .env file
-        deployment_name, api_key, endpoint = sk.azure_openai_settings_from_dot_env()
         deployment_name = "text-davinci-003"
 
     kernel.add_text_completion_service(
         "text_completion",
-        sk_oai.AzureTextCompletion(deployment_name, endpoint, api_key),
+        sk_oai.AzureTextCompletion(
+            deployment=deployment_name,
+            settings=azure_openai_settings,
+        ),
     )
 
     conversationSummarySkill = kernel.import_skill(
@@ -50,20 +50,15 @@ async def test_azure_summarize_conversation_using_skill(
 
 @pytest.mark.asyncio
 async def test_oai_summarize_conversation_using_skill(
-    setup_summarize_conversation_using_skill,
+    setup_summarize_conversation_using_skill, openai_settings: sk.OpenAISettings
 ):
     kernel, chatTranscript = setup_summarize_conversation_using_skill
 
-    if "Python_Integration_Tests" in os.environ:
-        api_key = os.environ["OpenAI__ApiKey"]
-        org_id = None
-    else:
-        # Load credentials from .env file
-        api_key, org_id = sk.openai_settings_from_dot_env()
-
     kernel.add_text_completion_service(
         "davinci-003",
-        sk_oai.OpenAITextCompletion("text-davinci-003", api_key, org_id=org_id),
+        sk_oai.OpenAITextCompletion(
+            model_id="text-davinci-003", settings=openai_settings
+        ),
     )
 
     conversationSummarySkill = kernel.import_skill(

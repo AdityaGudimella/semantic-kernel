@@ -13,9 +13,9 @@ class ConversationSummarySkill:
     """
 
     # The max tokens to process in a single semantic function call.
-    _max_tokens = 1024
+    _max_tokens: int = 1024
 
-    _summarize_conversation_prompt_template = (
+    _summarize_conversation_prompt_template: str = (
         "BEGIN CONTENT TO SUMMARIZE:\n"
         "{{" + "$INPUT" + "}}\n"
         "END CONTENT TO SUMMARIZE.\n"

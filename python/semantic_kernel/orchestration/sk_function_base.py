@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, Callable, Optional
 
@@ -10,18 +10,21 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
+from semantic_kernel.logging_ import SKLogger
 from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
+from semantic_kernel.pydantic_ import PydanticField
 from semantic_kernel.skill_definition.function_view import FunctionView
 
 if TYPE_CHECKING:
-    from semantic_kernel.skill_definition.read_only_skill_collection_base import (
-        ReadOnlySkillCollectionBase,
+    from semantic_kernel.skill_definition.read_only_skill_collection import (
+        ReadOnlySkillCollection,
+        SkillCollectionsT,
     )
 
 
-class SKFunctionBase(ABC):
+class SKFunctionBase(PydanticField):
     FUNCTION_PARAM_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     FUNCTION_NAME_REGEX = r"^[0-9A-Za-z_]*$"
     SKILL_NAME_REGEX = r"^[0-9A-Za-z_]*$"
@@ -131,7 +134,7 @@ class SKFunctionBase(ABC):
         context: Optional[SKContext] = None,
         memory: Optional[SemanticTextMemoryBase] = None,
         settings: Optional[CompleteRequestSettings] = None,
-        log: Optional[Logger] = None,
+        log: Optional[SKLogger] = None,
     ) -> SKContext:
         """
         Invokes the function with an explicit string input
@@ -151,7 +154,7 @@ class SKFunctionBase(ABC):
     @abstractmethod
     def set_default_skill_collection(
         self,
-        skills: "ReadOnlySkillCollectionBase",
+        skills: "ReadOnlySkillCollection[SkillCollectionsT]",
     ) -> "SKFunctionBase":
         """
         Sets the skill collection to use when the function is
@@ -159,7 +162,7 @@ class SKFunctionBase(ABC):
         a skill collection
 
         Arguments:
-            skills {ReadOnlySkillCollectionBase} -- Kernel's skill collection
+            skills {ReadOnlySkillCollection[SkillCollectionsT]} -- Kernel's skill collection
 
         Returns:
             SKFunctionBase -- The function instance

@@ -28,3 +28,8 @@ class PassThroughWithoutRetry(RetryMechanismBase):
         except Exception as e:
             log.warning(e, "Error executing action, not retrying")
             raise
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(self, PassThroughWithoutRetry):
+            return NotImplemented
+        return isinstance(__value, PassThroughWithoutRetry)

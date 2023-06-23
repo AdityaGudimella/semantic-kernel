@@ -1,28 +1,24 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from copy import deepcopy
-from logging import Logger
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
+import pydantic as pdt
 from numpy import array, linalg, ndarray
 
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
-from semantic_kernel.utils.null_logger import NullLogger
+from semantic_kernel.pydantic_ import SKBaseModel
 
 
-class VolatileMemoryStore(MemoryStoreBase):
-    _store: Dict[str, Dict[str, MemoryRecord]]
-    _logger: Logger
-
-    def __init__(self, logger: Optional[Logger] = None) -> None:
-        self._store = {}
-        self._logger = logger or NullLogger()
-        """Initializes a new instance of the VolatileMemoryStore class.
-
-        Arguments:
-            logger {Optional[Logger]} -- The logger to use. (default: {None})
-        """
+class VolatileMemoryStore(SKBaseModel, MemoryStoreBase):
+    store: Dict[str, Dict[str, MemoryRecord]] = pdt.Field(
+        default_factory=dict, description="The store."
+    )
+    _logger: SKLogger = pdt.Field(
+        default_factory=NullLogger, description="The logger to use."
+    )
 
     async def create_collection_async(self, collection_name: str) -> None:
         """Creates a new collection if it does not exist.
@@ -33,9 +29,7 @@ class VolatileMemoryStore(MemoryStoreBase):
         Returns:
             None
         """
-        if collection_name in self._store:
-            pass
-        else:
+        if collection_name not in self._store:
             self._store[collection_name] = {}
 
     async def get_collections_async(

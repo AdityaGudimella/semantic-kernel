@@ -6,15 +6,14 @@ import pytest
 from test_utils import retry
 
 import semantic_kernel.connectors.ai.open_ai as sk_oai
+from semantic_kernel.settings import AzureOpenAISettings
 
 
 @pytest.mark.asyncio
 async def test_azure_e2e_chat_completion_with_skill(
-    setup_tldr_function_for_oai_models, get_aoai_config
+    setup_tldr_function_for_oai_models, azure_openai_settings: AzureOpenAISettings
 ):
     kernel, sk_prompt, text_to_summarize = setup_tldr_function_for_oai_models
-
-    _, api_key, endpoint = get_aoai_config
 
     if "Python_Integration_Tests" in os.environ:
         deployment_name = os.environ["AzureOpenAIChat__DeploymentName"]
@@ -22,13 +21,16 @@ async def test_azure_e2e_chat_completion_with_skill(
         deployment_name = "gpt-35-turbo"
 
     print("* Service: Azure OpenAI Chat Completion")
-    print(f"* Endpoint: {endpoint}")
+    print(f"* Endpoint: {azure_openai_settings.endpoint}")
     print(f"* Deployment: {deployment_name}")
 
     # Configure LLM service
     kernel.add_chat_service(
         "chat_completion",
-        sk_oai.AzureChatCompletion(deployment_name, endpoint, api_key),
+        sk_oai.AzureChatCompletion(
+            deployment=deployment_name,
+            settings=azure_openai_settings,
+        ),
     )
 
     # Create the semantic function

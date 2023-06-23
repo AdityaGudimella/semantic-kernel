@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from logging import Logger
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple, Union
 
 import openai
+import pydantic as pdt
 
 from semantic_kernel.connectors.ai.ai_exception import AIException
 from semantic_kernel.connectors.ai.chat_completion_client_base import (
@@ -16,48 +17,22 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
-from semantic_kernel.utils.null_logger import NullLogger
+from semantic_kernel.logging_ import NullLogger
+from semantic_kernel.pydantic_ import SKBaseModel
+from semantic_kernel.settings import OpenAISettings
 
 
-class OpenAIChatCompletion(ChatCompletionClientBase, TextCompletionClientBase):
-    _model_id: str
-    _api_key: str
-    _org_id: Optional[str] = None
-    _api_type: Optional[str] = None
-    _api_version: Optional[str] = None
-    _endpoint: Optional[str] = None
-    _log: Logger
-
-    def __init__(
-        self,
-        model_id: str,
-        api_key: str,
-        org_id: Optional[str] = None,
-        api_type: Optional[str] = None,
-        api_version: Optional[str] = None,
-        endpoint: Optional[str] = None,
-        log: Optional[Logger] = None,
-    ) -> None:
-        """
-        Initializes a new instance of the OpenAIChatCompletion class.
-
-        Arguments:
-            model_id {str} -- OpenAI model name, see
-                https://platform.openai.com/docs/models
-            api_key {str} -- OpenAI API key, see
-                https://platform.openai.com/account/api-keys
-            org_id {Optional[str]} -- OpenAI organization ID.
-                This is usually optional unless your
-                account belongs to multiple organizations.
-        """
-        self._model_id = model_id
-        self._api_key = api_key
-        self._org_id = org_id
-        self._api_type = api_type
-        self._api_version = api_version
-        self._endpoint = endpoint
-        self._log = log if log is not None else NullLogger()
-        self._messages = []
+class OpenAIChatCompletion(
+    SKBaseModel, ChatCompletionClientBase, TextCompletionClientBase
+):
+    model_id: str = pdt.Field(
+        description="OpenAI model name. See: https://platform.openai.com/docs/models"
+    )
+    settings: OpenAISettings = pdt.Field(
+        description="OpenAI settings. See: semantic_kernel.settings.OpenAISettings"
+    )
+    _logger: Logger = pdt.PrivateAttr(default_factory=NullLogger)
+    _messages: List[Tuple[str, str]] = pdt.PrivateAttr([])
 
     async def complete_chat_async(
         self, messages: List[Tuple[str, str]], request_settings: ChatRequestSettings
@@ -183,10 +158,10 @@ class OpenAIChatCompletion(ChatCompletionClientBase, TextCompletionClientBase):
             )
 
         model_args = {}
-        if self._api_type in ["azure", "azure_ad"]:
-            model_args["engine"] = self._model_id
+        if self.settings.api_type in ["azure", "azure_ad"]:
+            model_args["engine"] = self.model_id
         else:
-            model_args["model"] = self._model_id
+            model_args["model"] = self.model_id
 
         formatted_messages = [
             {"role": role, "content": message} for role, message in messages
@@ -195,11 +170,11 @@ class OpenAIChatCompletion(ChatCompletionClientBase, TextCompletionClientBase):
         try:
             response: Any = await openai.ChatCompletion.acreate(
                 **model_args,
-                api_key=self._api_key,
-                api_type=self._api_type,
-                api_base=self._endpoint,
-                api_version=self._api_version,
-                organization=self._org_id,
+                api_key=self.settings.api_key,
+                api_type=self.settings.api_type,
+                api_base=self.settings.endpoint,
+                api_version=self.settings.api_version,
+                organization=self.settings.org_id,
                 messages=formatted_messages,
                 temperature=request_settings.temperature,
                 top_p=request_settings.top_p,
@@ -214,7 +189,7 @@ class OpenAIChatCompletion(ChatCompletionClientBase, TextCompletionClientBase):
                 AIException.ErrorCodes.ServiceError,
                 "OpenAI service failed to complete the chat",
                 ex,
-            )
+            ) from ex
 
         # TODO: tracking on token counts/etc.
 

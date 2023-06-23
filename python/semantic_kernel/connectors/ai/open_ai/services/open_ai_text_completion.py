@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
-from typing import Any, List, Optional, Union
+from typing import Any, List, Union
 
 import openai
+import pydantic as pdt
 
 from semantic_kernel.connectors.ai.ai_exception import AIException
 from semantic_kernel.connectors.ai.complete_request_settings import (
@@ -12,47 +12,19 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
-from semantic_kernel.utils.null_logger import NullLogger
+from semantic_kernel.logging_ import NullLogger, SKLogger
+from semantic_kernel.pydantic_ import SKBaseModel
+from semantic_kernel.settings import OpenAISettings
 
 
-class OpenAITextCompletion(TextCompletionClientBase):
-    _model_id: str
-    _api_key: str
-    _api_type: Optional[str] = None
-    _api_version: Optional[str] = None
-    _endpoint: Optional[str] = None
-    _org_id: Optional[str] = None
-    _log: Logger
-
-    def __init__(
-        self,
-        model_id: str,
-        api_key: str,
-        org_id: Optional[str] = None,
-        api_type: Optional[str] = None,
-        api_version: Optional[str] = None,
-        endpoint: Optional[str] = None,
-        log: Optional[Logger] = None,
-    ) -> None:
-        """
-        Initializes a new instance of the OpenAITextCompletion class.
-
-        Arguments:
-            model_id {str} -- OpenAI model name, see
-                https://platform.openai.com/docs/models
-            api_key {str} -- OpenAI API key, see
-                https://platform.openai.com/account/api-keys
-            org_id {Optional[str]} -- OpenAI organization ID.
-                This is usually optional unless your
-                account belongs to multiple organizations.
-        """
-        self._model_id = model_id
-        self._api_key = api_key
-        self._api_type = api_type
-        self._api_version = api_version
-        self._endpoint = endpoint
-        self._org_id = org_id
-        self._log = log if log is not None else NullLogger()
+class OpenAITextCompletion(SKBaseModel, TextCompletionClientBase):
+    model_id: str = pdt.Field(
+        description="OpenAI model name. See: https://platform.openai.com/docs/models"
+    )
+    settings: OpenAISettings = pdt.Field(
+        description="OpenAI settings. See: semantic_kernel.settings.OpenAISettings"
+    )
+    _logger: SKLogger = pdt.PrivateAttr(default_factory=NullLogger)
 
     async def complete_async(
         self, prompt: str, request_settings: CompleteRequestSettings
@@ -115,19 +87,19 @@ class OpenAITextCompletion(TextCompletionClientBase):
             )
 
         model_args = {}
-        if self._api_type in ["azure", "azure_ad"]:
-            model_args["engine"] = self._model_id
+        if self.settings.api_type in ["azure", "azure_ad"]:
+            model_args["engine"] = self.model_id
         else:
-            model_args["model"] = self._model_id
+            model_args["model"] = self.model_id
 
         try:
             response: Any = await openai.Completion.acreate(
                 **model_args,
-                api_key=self._api_key,
-                api_type=self._api_type,
-                api_base=self._endpoint,
-                api_version=self._api_version,
-                organization=self._org_id,
+                api_key=self.settings.api_key,
+                api_type=self.settings.api_type,
+                api_base=self.settings.endpoint,
+                api_version=self.settings.api_version,
+                organization=self.settings.org_id,
                 prompt=prompt,
                 temperature=request_settings.temperature,
                 top_p=request_settings.top_p,

@@ -1,41 +1,19 @@
 # Copyright (c) Microsoft. All rights reserved.
+import pydantic as pdt
 
-from semantic_kernel.utils.validation import validate_function_param_name
+from semantic_kernel.constants import SKILL_NAME_REGEX
+from semantic_kernel.pydantic_ import SKBaseModel
 
 
-class ParameterView:
-    _name: str
-    _description: str
-    _default_value: str
+class ParameterView(SKBaseModel):
+    name: str = pdt.Field(..., regex=SKILL_NAME_REGEX)
+    description_: str = pdt.Field(..., alias="description")
+    default_value: str
 
-    def __init__(self, name: str, description: str, default_value: str) -> None:
-        validate_function_param_name(name)
-
-        self._name = name
-        self._description = description
-        self._default_value = default_value
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def description(self) -> str:
-        return self._description
-
-    @property
-    def default_value(self) -> str:
-        return self._default_value
-
-    @name.setter
-    def name(self, value: str) -> None:
-        validate_function_param_name(value)
-        self._name = value
-
-    @description.setter
-    def description(self, value: str) -> None:
-        self._description = value
-
-    @default_value.setter
-    def default_value(self, value: str) -> None:
-        self._default_value = value
+    @classmethod
+    def from_native_method(cls, method, name: str) -> "ParameterView":
+        return cls(
+            name=name,
+            description_=method.__sk_function_input_description__,
+            default_value=method.__sk_function_input_default_value__,
+        )

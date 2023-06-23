@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from re import match as re_match
 from typing import Optional, Tuple
+
+import pydantic as pdt
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block import Block
@@ -11,23 +12,28 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class FunctionIdBlock(Block, TextRenderer):
-    def __init__(self, content: Optional[str] = None, log: Optional[Logger] = None):
-        super().__init__(content=content and content.strip(), log=log)
+    content: pdt.constr(strip_whitespace=True, min_length=1)
 
-        function_name_parts = self.content.split(".")
-        if len(function_name_parts) > 2:
-            self.log.error(f"Invalid function name `{self.content}`")
-            raise ValueError(
-                "A function name can contain at most one dot separating "
-                "the skill name from the function name"
-            )
+    _skill_name: str = pdt.PrivateAttr(default=None)
+    _function_name: str = pdt.PrivateAttr(default=None)
 
-        if len(function_name_parts) == 2:
-            self.skill_name = function_name_parts[0]
-            self.function_name = function_name_parts[1]
-        else:
-            self.skill_name = ""
-            self.function_name = self.content
+    @property
+    def skill_name(self) -> str:
+        if self._skill_name is None:
+            (
+                self._skill_name,
+                self._function_name,
+            ) = self._extract_skill_and_function_names(self.content)
+        return self._skill_name
+
+    @property
+    def function_name(self) -> str:
+        if self._function_name is None:
+            (
+                self._skill_name,
+                self._function_name,
+            ) = self._extract_skill_and_function_names(self.content)
+        return self._function_name
 
     @property
     def type(self) -> BlockTypes:
@@ -72,3 +78,13 @@ class FunctionIdBlock(Block, TextRenderer):
                     return True
 
         return False
+
+    @staticmethod
+    def _extract_skill_and_function_names(content: str) -> Tuple[str, str]:
+        parts = content.split(".")
+        if len(parts) > 2:
+            raise ValueError(
+                f"Function name: {content} can not contain more than one dot separating"
+                + " the skill name from the function name"
+            )
+        return parts[0] if len(parts) == 2 else ""

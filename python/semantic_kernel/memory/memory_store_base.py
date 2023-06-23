@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Tuple
 
 from numpy import ndarray
 
 from semantic_kernel.memory.memory_record import MemoryRecord
+from semantic_kernel.pydantic_ import PydanticField
 
 
-class MemoryStoreBase(ABC):
+class MemoryStoreBase(PydanticField):
     @abstractmethod
     async def create_collection_async(self, collection_name: str) -> None:
         pass

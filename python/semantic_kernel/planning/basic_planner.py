@@ -6,6 +6,7 @@ import json
 from semantic_kernel.kernel import Kernel
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.planning.plan import Plan
+from semantic_kernel.pydantic_ import PydanticField
 
 PROMPT = """
 You are a planner for the Semantic Kernel.
@@ -106,16 +107,11 @@ E-mail these ideas to my significant other. Translate it to French."
 """
 
 
-class BasicPlanner:
-    """
-    Basic JSON-based planner for the Semantic Kernel.
-    """
+class BasicPlanner(PydanticField):
+    """Basic JSON-based planner for the Semantic Kernel."""
 
     def _create_available_functions_string(self, kernel: Kernel) -> str:
-        """
-        Given an instance of the Kernel, create the [AVAILABLE FUNCTIONS]
-        string for the prompt.
-        """
+        """Create the [AVAILABLE FUNCTIONS] string for the prompt."""
         # Get a dictionary of skill names to all native and semantic functions
         native_functions = kernel.skills.get_functions_view()._native_functions
         semantic_functions = kernel.skills.get_functions_view()._semantic_functions
@@ -130,7 +126,7 @@ class BasicPlanner:
 
         for skill_name in skill_names:
             for func in all_functions[skill_name]:
-                key = skill_name + "." + func.name
+                key = f"{skill_name}.{func.name}"
                 all_functions_descriptions_dict[key] = func.description
                 all_functions_params_dict[key] = func.parameters
 
@@ -139,18 +135,15 @@ class BasicPlanner:
         for name in list(all_functions_descriptions_dict.keys()):
             available_functions_string += name + "\n"
             description = all_functions_descriptions_dict[name]
-            available_functions_string += "description: " + description + "\n"
+            available_functions_string += f"description: {description}" + "\n"
             available_functions_string += "args:\n"
 
             # Add the parameters for each function
             parameters = all_functions_params_dict[name]
             for param in parameters:
-                if not param.description:
-                    param_description = ""
-                else:
-                    param_description = param.description
+                param_description = param.description or ""
                 available_functions_string += (
-                    "- " + param.name + ": " + param_description + "\n"
+                    f"- {param.name}: {param_description}" + "\n"
                 )
             available_functions_string += "\n"
 
@@ -197,15 +190,10 @@ class BasicPlanner:
             skill_name, function_name = subtask["function"].split(".")
             sk_function = kernel.skills.get_function(skill_name, function_name)
 
-            # Get the arguments dictionary for the function
-            args = subtask.get("args", None)
-            if args:
+            if args := subtask.get("args", None):
                 for key, value in args.items():
                     context[key] = value
-                output = await sk_function.invoke_async(variables=context)
-
-            else:
-                output = await sk_function.invoke_async(variables=context)
+            output = await sk_function.invoke_async(variables=context)
 
             # Override the input context variable with the output of the function
             context["input"] = output.result

@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, List, Union
+
+from semantic_kernel.pydantic_ import PydanticField
 
 if TYPE_CHECKING:
     from semantic_kernel.connectors.ai.complete_request_settings import (
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
     )
 
 
-class TextCompletionClientBase(ABC):
+class TextCompletionClientBase(PydanticField):
     @abstractmethod
     async def complete_async(
         self,
