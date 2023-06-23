@@ -29,7 +29,10 @@ from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
 from semantic_kernel.memory.null_memory import NullMemory
 from semantic_kernel.memory.semantic_text_memory import SemanticTextMemory
-from semantic_kernel.memory.semantic_text_memory_base import SemanticTextMemoryBase
+from semantic_kernel.memory.semantic_text_memory_base import (
+    SemanticTextMemoryBase,
+    SemanticTextMemoryT,
+)
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function import SKFunction
@@ -56,6 +59,7 @@ from semantic_kernel.skill_definition.skill_collection_base import SkillCollecti
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
     PromptTemplatingEngine,
+    PromptTemplatingEngineT,
 )
 
 T = TypeVar("T")
@@ -106,20 +110,23 @@ class DefaultServices(SKBaseModel):
     )
 
 
-class Kernel(SKGenericModel, Generic[SkillCollectionT]):
+class Kernel(
+    SKGenericModel,
+    Generic[SemanticTextMemoryT, SkillCollectionT, PromptTemplatingEngineT],
+):
     logger: SKLogger = pdt.Field(
         default_factory=NullLogger,
         description="The logger that is used by the kernel.",
     )
     skill_collection: SkillCollectionT = pdt.Field(
-        default=None,
+        default_factory=SkillCollection,
         description="The skill collection that contains all the skills that are loaded into the kernel.",  # noqa: E501
     )
-    prompt_template_engine: PromptTemplatingEngine = pdt.Field(
-        default=None,
+    prompt_template_engine: PromptTemplatingEngineT = pdt.Field(
+        default_factory=PromptTemplateEngine,
         description="The prompt template engine that is used to generate prompts for the user.",  # noqa: E501
     )
-    memory: SemanticTextMemoryBase = pdt.Field(
+    memory: SemanticTextMemoryT = pdt.Field(
         default_factory=NullMemory,
         description="The memory that is used by the kernel to store information.",
     )
@@ -135,32 +142,6 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
         default_factory=PassThroughWithoutRetry,
         description="The retry mechanism that is used by the kernel.",
     )
-
-    @pdt.validator(
-        "skill_collection",
-        pre=True,
-        # NOTE: `allow_reuse` is required because SkillCollectionsT defines it's own
-        # validator.
-        allow_reuse=True,
-    )
-    def skill_collection_validator(cls, v: Any, **kwargs) -> SkillCollectionBase:
-        """Validate the skill collection."""
-        assert kwargs.get("logger") is not None
-        return SkillCollection(logger=kwargs["logger"]) if v is None else v
-
-    @pdt.validator(
-        "prompt_template_engine",
-        pre=True,
-        # NOTE: `allow_reuse` is required because PromptTemplatingEngine defines it's
-        # own validator.
-        allow_reuse=True,
-    )
-    def prompt_template_engine_validator(
-        cls, v: Any, **kwargs: Any
-    ) -> PromptTemplateEngine:
-        """Validate the skill collection."""
-        assert kwargs.get("logger") is not None
-        return PromptTemplateEngine(logger=kwargs["logger"]) if v is None else v
 
     @property
     def skills(self) -> ReadOnlySkillCollection[SkillCollection]:

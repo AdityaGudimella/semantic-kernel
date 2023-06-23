@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 import abc
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.orchestration.sk_context import SKContext
@@ -81,3 +81,8 @@ class PromptTemplatingEngine(PydanticField):
             Text Blocks
         """
         raise NotImplementedError
+
+
+PromptTemplatingEngineT = TypeVar(
+    "PromptTemplatingEngineT", bound=PromptTemplatingEngine
+)

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft. All rights reserved.
 
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.pydantic_ import PydanticField
@@ -54,3 +54,6 @@ class SemanticTextMemoryBase(PydanticField):
     @abstractmethod
     async def get_collections_async(self) -> List[str]:
         pass
+
+
+SemanticTextMemoryT = TypeVar("SemanticTextMemoryT", bound=SemanticTextMemoryBase)

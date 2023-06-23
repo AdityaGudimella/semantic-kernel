@@ -37,11 +37,15 @@ class PydanticField(abc.ABC):
     @classmethod
     def no_op_validate(cls, v: t.Any) -> t.Any:
         """Does no validation, just returns the value."""
+        if v is None:
+            v = cls()
+        if isinstance(v, str):
+            v = cls(**json.loads(v))
         return v
 
     def json(self) -> str:
         """Serialize the model to JSON."""
-        return ""
+        return "{}"
 
     @classmethod
     def parse_raw(
@@ -55,6 +59,10 @@ class PydanticField(abc.ABC):
     ) -> te.Self:
         """Parse a raw byte string into a model."""
         return cls()
+
+    def __eq__(self, other: t.Any) -> bool:
+        """Check if two instances are equal."""
+        return isinstance(other, self.__class__)
 
 
 _JSON_ENCODERS: t.Final[t.Dict[t.Type[t.Any], t.Callable[[t.Any], str]]] = {

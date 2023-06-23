@@ -74,7 +74,7 @@ from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
 from semantic_kernel.planning.plan import Plan
-from semantic_kernel.pydantic_ import PydanticField, SKBaseModel
+from semantic_kernel.pydantic_ import PydanticField, SKBaseModel, SKGenericModel
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
@@ -94,6 +94,7 @@ from semantic_kernel.skill_definition.function_view import FunctionView
 from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
+    SkillCollectionT,
 )
 from semantic_kernel.skill_definition.sk_function_decorator import sk_function
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
@@ -114,94 +115,6 @@ from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
 )
 from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 from semantic_kernel.template_engine.template_tokenizer import TemplateTokenizer
-
-
-@pytest.fixture()
-def kernel(kernel_settings: KernelSettings) -> sk.Kernel:
-    """Return a `Kernel`."""
-    sk_prompt = """
-    ChatBot can have a conversation with you about any topic.
-    It can give explicit instructions or say 'I don't know'
-    when it doesn't know the answer.
-
-    {{$chat_history}}
-    User:> {{$user_input}}
-    ChatBot:>
-    """
-
-    kernel = sk.Kernel()
-
-    kernel.add_text_completion_service(
-        "davinci-003",
-        OpenAITextCompletion(
-            model_id="text-davinci-003", settings=kernel_settings.openai
-        ),
-    )
-
-    prompt_config = sk.PromptTemplateConfig.from_completion_parameters(
-        max_tokens=2000, temperature=0.7, top_p=0.4
-    )
-
-    prompt_template = sk.PromptTemplate(
-        template=sk_prompt,
-        template_engine=kernel.prompt_template_engine,
-        prompt_config=prompt_config,
-    )
-
-    function_config = sk.SemanticFunctionConfig(prompt_config, prompt_template)
-    kernel.register_semantic_function("ChatBot", "Chat", function_config)
-
-    system_message = """
-    You are a chat bot. Your name is Mosscap and
-    you have one goal: figure out what people need.
-    Your full name, should you need to know it, is
-    Splendid Speckled Mosscap. You communicate
-    effectively, but you tend to answer with long
-    flowery prose.
-    """
-
-    kernel.add_chat_service(
-        "chat-gpt",
-        OpenAIChatCompletion(model_id="gpt-3.5-turbo", settings=kernel_settings.openai),
-    )
-
-    prompt_config = sk.PromptTemplateConfig.from_completion_parameters(
-        max_tokens=2000, temperature=0.7, top_p=0.8
-    )
-
-    prompt_template = sk.ChatPromptTemplate(
-        "{{$user_input}}", kernel.prompt_template_engine, prompt_config
-    )
-
-    prompt_template.add_system_message(system_message)
-    prompt_template.add_user_message("Hi there, who are you?")
-    prompt_template.add_assistant_message(
-        "I am Mosscap, a chat bot. I'm trying to figure out what people need."
-    )
-    function_config = sk.SemanticFunctionConfig(prompt_config, prompt_template)
-    kernel.register_semantic_function("ChatBot", "Chat", function_config)
-
-    return kernel
-
-
-@pytest.mark.skip(reason="Remove or move.")
-def test_serialization_and_deserialization(kernel: sk.Kernel) -> None:
-    """Test serialization of a `Kernel` to JSON."""
-    loaded_kernel = from_json(to_json(kernel))
-    assert isinstance(loaded_kernel, type(kernel))
-    assert isinstance(
-        loaded_kernel.prompt_template_engine, type(kernel.prompt_template_engine)
-    )
-    assert kernel.all_chat_services() == loaded_kernel.all_chat_services()
-    assert (
-        kernel.all_text_completion_services()
-        == loaded_kernel.all_text_completion_services()
-    )
-    assert (
-        kernel.all_text_completion_services()
-        == loaded_kernel.all_text_completion_services()
-    )
-
 
 PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
 
@@ -329,7 +242,7 @@ def serializable(
         HuggingFaceTextEmbedding: HuggingFaceTextEmbedding(
             model_id="EleutherAI/gpt-neo-2.7B"
         ),
-        Kernel: Kernel(),
+        Kernel[NullMemory, SkillCollection, PromptTemplateEngine]: Kernel(),
         MemoryRecord: MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
         MemoryQueryResult: MemoryQueryResult.from_memory_record(
             MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
@@ -480,8 +393,6 @@ def _recursive_eq(
 @pytest.mark.parametrize(
     "serializable_type",
     [
-        # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
-        # Kernel,
         SKLogger,
         SKBaseModel,
         AzureOpenAISettings,
@@ -502,6 +413,7 @@ def _recursive_eq(
         FunctionsView,
         HuggingFaceTextCompletion,
         HuggingFaceTextEmbedding,
+        Kernel[NullMemory, SkillCollection, PromptTemplateEngine],
         MemoryRecord,
         NullLogger,
         OpenAIChatCompletion,
@@ -531,9 +443,11 @@ def _recursive_eq(
         ),
     ],
 )
-def test_serialization(serializable: _Serializable) -> None:
+def test_serialization(
+    serializable_type: t.Type[_Serializable], serializable: _Serializable
+) -> None:
     """Test serialization of an object to JSON."""
     serialized = serializable.json()
     assert isinstance(serialized, str), serialized
-    deserialized = serializable.parse_raw(serialized)
+    deserialized = serializable_type.parse_raw(serialized)
     assert _recursive_eq(serializable, deserialized)

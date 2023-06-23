@@ -6,7 +6,6 @@ import pydantic as pdt
 from typing_extensions import Self
 
 from semantic_kernel.kernel_exception import KernelException
-from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
@@ -24,7 +23,6 @@ class SkillCollection(SKBaseModel, SkillCollectionBase):
         alias="skill_collection", default_factory=dict
     )
     _read_only_skill_collection: "ReadOnlySkillCollection[Self]" = pdt.PrivateAttr()
-    _logger: SKLogger = pdt.PrivateAttr(default_factory=NullLogger)
 
     def __init__(self: Self, **kwags: Any) -> None:
         super().__init__(**kwags)
