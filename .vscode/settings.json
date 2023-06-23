@@ -97,5 +97,6 @@
   "peacock.color": "White",
   "[python]": {
     "editor.defaultFormatter": "trunk.io"
-  }
+  },
+  "python.analysis.typeCheckingMode": "off"
 }

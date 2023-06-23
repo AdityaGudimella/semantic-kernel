@@ -46,16 +46,18 @@ class AzureChatCompletion(
 
     # TODO: Figure out expected return type hint
     async def complete_chat_async(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        return super().complete_chat_async(*args, **kwargs)
+        return await self.openai_chat_completion.complete_chat_async(*args, **kwargs)
 
     # TODO: Figure out expected return type hint
     async def complete_chat_stream_async(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        return super().complete_chat_stream_async(*args, **kwargs)
+        return await self.openai_chat_completion.complete_chat_stream_async(
+            *args, **kwargs
+        )
 
     # TODO: Figure out expected return type hint
     async def complete_async(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        return super().complete_async(*args, **kwargs)
+        return await self.openai_chat_completion.complete_async(*args, **kwargs)
 
     # TODO: Figure out expected return type hint
     async def complete_stream_async(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        return super().complete_stream_async(*args, **kwargs)
+        return await self.openai_chat_completion.complete_stream_async(*args, **kwargs)

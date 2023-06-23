@@ -17,7 +17,6 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
-from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import (
     AzureOpenAISettings,
     KernelSettings,
@@ -44,8 +43,6 @@ __all__ = [
     "SKContext",
     "memory",
     "core_skills",
-    "from_json",
-    "to_json",
     "__version__",
     "REPO_ROOT",
     "AzureOpenAISettings",

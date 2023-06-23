@@ -6,6 +6,7 @@ import pytest
 
 import semantic_kernel as sk
 import semantic_kernel.connectors.ai.open_ai as sk_oai
+from semantic_kernel.logging_ import LoggerSettings, SKLogger
 from semantic_kernel.settings import (
     AzureOpenAISettings,
     KernelSettings,
@@ -21,6 +22,12 @@ def kernel_settings() -> KernelSettings:
 
 
 @pytest.fixture()
+def test_logger_settings(kernel_settings: KernelSettings) -> LoggerSettings:
+    """Returns the default logger settings used in tests."""
+    return kernel_settings.logging
+
+
+@pytest.fixture()
 def openai_settings(kernel_settings: KernelSettings) -> OpenAISettings:
     """Returns the default OpenAI settings."""
     return kernel_settings.openai
@@ -29,7 +36,28 @@ def openai_settings(kernel_settings: KernelSettings) -> OpenAISettings:
 @pytest.fixture()
 def azure_openai_settings(kernel_settings: KernelSettings) -> AzureOpenAISettings:
     """Returns the default Azure OpenAI config."""
-    return kernel_settings.azure_openai
+    result = kernel_settings.azure_openai
+    assert result
+    return result
+
+
+@pytest.fixture()
+def mock_azure_openai_settings() -> AzureOpenAISettings:
+    """Returns a mock Azure OpenAI config that will not work with actual API."""
+    return AzureOpenAISettings(
+        api_key="test_api_key",
+        endpoint="https://test-endpoint.com",
+        api_version="2023-03-15-preview",
+    )
+
+
+@pytest.fixture()
+def test_logger(test_logger_settings: LoggerSettings) -> SKLogger:
+    """Returns a logger to be used in testing.
+
+    Configure your test logging settings here.
+    """
+    return SKLogger(name="test_logger", settings=test_logger_settings)
 
 
 @pytest.fixture()

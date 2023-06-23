@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import Logger
 from typing import TYPE_CHECKING, List, Tuple, Union
 

@@ -84,6 +84,7 @@ class OpenAIChatCompletion(
             max_tokens=request_settings.max_tokens,
             number_of_responses=request_settings.number_of_responses,
         )
+        print("HERE ALSO")
         response = await self._send_chat_request(
             prompt_to_message, chat_settings, False
         )

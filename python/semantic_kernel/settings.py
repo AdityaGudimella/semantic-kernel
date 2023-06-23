@@ -60,19 +60,17 @@ class OpenAISettings(SKBaseSettings):
     )
     _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
 
-    def __init__(self, **data: t.Any) -> None:
-        super().__init__(**data)
-        self._openai_api_kwargs = OpenAIAPIKwargs(
-            api_key=self.api_key.get_secret_value(),
-            api_type=self.api_type,
-            api_base=self.endpoint,
-            api_version=self.api_version,
-            organization=self.org_id,
-        )
-
     @property
     def openai_api_kwargs(self) -> OpenAIAPIKwargs:
         """Get the kwargs used for the OpenAI API calls."""
+        if self._openai_api_kwargs is None:
+            self._openai_api_kwargs = OpenAIAPIKwargs(
+                api_key=self.api_key.get_secret_value(),
+                api_type=self.api_type,
+                api_base=self.endpoint,
+                api_version=self.api_version,
+                organization=self.org_id,
+            )
         return self._openai_api_kwargs
 
 
@@ -91,7 +89,8 @@ class AzureOpenAISettings(SKBaseSettings):
             "Azure OpenAI API key. See: ?"
             + " This value can be found in the Keys & Endpoint section when examining"
             + " your resource in the Azure portal. You can use either KEY1 or KEY2."
-        )
+        ),
+        min_length=1,
     )
     endpoint: str = pdt.Field(
         description=(
@@ -108,8 +107,8 @@ class AzureOpenAISettings(SKBaseSettings):
         default=False,
         description="Whether to use Azure Active Directory authentication.",
     )
-    _openai_settings: OpenAISettings = pdt.PrivateAttr()
-    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
+    _openai_settings: OpenAISettings = pdt.PrivateAttr(None)
+    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr(None)
 
     @pdt.validator("endpoint", allow_reuse=True)
     def validate_endpoint(cls, v: str) -> str:
@@ -118,34 +117,35 @@ class AzureOpenAISettings(SKBaseSettings):
             raise ValueError("Endpoint must start with 'https://'")
         return v
 
-    def __init__(self, **data: t.Any) -> None:
-        super().__init__(**data)
-        openai_kwargs = {
-            k: v for k, v in data.items() if k in OpenAISettings.__fields__
-        }
-        self._openai_settings = OpenAISettings(**openai_kwargs)
-        self._openai_api_kwargs = OpenAIAPIKwargs(
-            api_key=self.api_key.get_secret_value(),
-            api_type="azure",
-            api_base=self.endpoint,
-            api_version=self.api_version,
-            organization=None,
-        )
+    @property
+    def openai_api_kwargs(self) -> OpenAIAPIKwargs:
+        """Get the kwargs used for the OpenAI API calls."""
+        if self._openai_api_kwargs is None:
+            self._openai_api_kwargs = OpenAIAPIKwargs(
+                api_key=self.api_key.get_secret_value(),
+                api_type="azure",
+                api_base=self.endpoint,
+                api_version=self.api_version,
+                organization=None,
+            )
+        return self._openai_api_kwargs
+
+    @property
+    def openai_settings(self) -> OpenAISettings:
+        """Get the OpenAI settings."""
+        if self._openai_settings is None:
+            self._openai_settings = OpenAISettings(
+                api_key=self.api_key,
+                api_type="azure",
+                api_version=self.api_version,
+                endpoint=self.endpoint,
+            )
+        return self._openai_settings
 
     @property
     def api_type(self) -> AzureAPIType:
         """Get the Azure API type."""
         return AzureAPIType.AzureAD if self.ad_auth else AzureAPIType.Azure
-
-    @property
-    def openai_settings(self) -> OpenAISettings:
-        """Get the OpenAI settings."""
-        return self._openai_settings
-
-    @property
-    def openai_api_kwargs(self) -> OpenAIAPIKwargs:
-        """Get the kwargs used for the OpenAI API calls."""
-        return self._openai_api_kwargs
 
 
 class KernelSettings(SKBaseSettings):
