@@ -101,6 +101,7 @@ from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
+from semantic_kernel.template_engine.blocks.symbols import Symbols
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
@@ -222,6 +223,7 @@ PydanticFieldT = t.TypeVar("PydanticFieldT", bound=PydanticField)
         SemanticTextMemoryBase,
         SKFunctionBase,
         SkillCollectionBase,
+        Symbols,
         TextCompletionClientBase,
         TextMemorySkill,
         TextRenderer,

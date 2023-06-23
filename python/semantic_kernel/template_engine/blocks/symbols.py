@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft. All rights reserved.
 
+from semantic_kernel.pydantic_ import PydanticField
 
-class Symbols:
+
+class Symbols(PydanticField):
     BLOCK_STARTER = "{"
     BLOCK_ENDER = "}"
 
