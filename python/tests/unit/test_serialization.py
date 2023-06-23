@@ -84,6 +84,9 @@ from semantic_kernel.semantic_functions.prompt_template_base import PromptTempla
 from semantic_kernel.semantic_functions.prompt_template_config import (
     PromptTemplateConfig,
 )
+from semantic_kernel.semantic_functions.semantic_function_config import (
+    SemanticFunctionConfig,
+)
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
 from semantic_kernel.skill_definition.read_only_skill_collection import (
@@ -347,6 +350,14 @@ def serializable(
             prompt_config=PromptTemplateConfig(),
         ),
         ReadOnlySkillCollection: SkillCollection().read_only_skill_collection,
+        SemanticFunctionConfig: SemanticFunctionConfig(
+            prompt_template_config=PromptTemplateConfig(),
+            prompt_template=PromptTemplate(
+                template="",
+                template_engine=PromptTemplateEngine(),
+                prompt_config=PromptTemplateConfig(),
+            ),
+        ),
         SemanticTextMemory: SemanticTextMemory(
             storage=ChromaMemoryStore(),
             embeddings_generator=OpenAITextEmbedding(
@@ -472,6 +483,7 @@ def _recursive_eq(
         PromptTemplateEngine,
         PromptTemplate,
         ReadOnlySkillCollection,
+        SemanticFunctionConfig,
         SemanticTextMemory,
         SKContext,
         SkillCollection,
