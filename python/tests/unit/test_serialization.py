@@ -89,6 +89,8 @@ from semantic_kernel.semantic_functions.semantic_function_config import (
 )
 from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import KernelSettings
+from semantic_kernel.skill_definition.function_view import FunctionView
+from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
 )
@@ -305,6 +307,15 @@ def serializable(
         CompleteRequestSettings: CompleteRequestSettings(),
         ContextVariables: ContextVariables(),
         FunctionIdBlock: FunctionIdBlock(content="foo.bar"),
+        FunctionView: FunctionView(
+            name="test",
+            skill_name="test",
+            description="A test function.",
+            is_semantic=True,
+            is_asynchronous=True,
+            parameters=[],
+        ),
+        FunctionsView: FunctionsView(),
         HuggingFaceTextCompletion: HuggingFaceTextCompletion(
             model_id="EleutherAI/gpt-neo-2.7B"
         ),
@@ -471,6 +482,8 @@ def _recursive_eq(
         CompleteRequestSettings,
         ContextVariables,
         FunctionIdBlock,
+        FunctionView,
+        FunctionsView,
         HuggingFaceTextCompletion,
         HuggingFaceTextEmbedding,
         MemoryRecord,

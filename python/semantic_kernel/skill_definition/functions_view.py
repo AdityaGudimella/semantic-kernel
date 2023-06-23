@@ -2,17 +2,20 @@
 
 from typing import Dict, List
 
+import pydantic as pdt
+
 from semantic_kernel.kernel_exception import KernelException
+from semantic_kernel.pydantic_ import SKBaseModel
 from semantic_kernel.skill_definition.function_view import FunctionView
 
 
-class FunctionsView:
-    _semantic_functions: Dict[str, List[FunctionView]]
-    _native_functions: Dict[str, List[FunctionView]]
-
-    def __init__(self) -> None:
-        self._semantic_functions = {}
-        self._native_functions = {}
+class FunctionsView(SKBaseModel):
+    _semantic_functions: Dict[str, List[FunctionView]] = pdt.PrivateAttr(
+        default_factory=dict
+    )
+    _native_functions: Dict[str, List[FunctionView]] = pdt.PrivateAttr(
+        default_factory=dict
+    )
 
     def add_function(self, view: FunctionView) -> "FunctionsView":
         if view.is_semantic:
