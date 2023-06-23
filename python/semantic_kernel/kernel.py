@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
+import contextlib
 import glob
 import importlib
 import inspect
@@ -56,7 +57,6 @@ from semantic_kernel.template_engine.prompt_template_engine import PromptTemplat
 from semantic_kernel.template_engine.protocols.prompt_templating_engine import (
     PromptTemplatingEngine,
 )
-from semantic_kernel.utils.validation import validate_function_name, validate_skill_name
 
 T = TypeVar("T")
 
@@ -175,9 +175,6 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
         if skill_name is None or skill_name == "":
             skill_name = SkillCollection.GLOBAL_SKILL
         assert skill_name is not None  # for type checker
-
-        validate_skill_name(skill_name)
-        validate_function_name(function_name)
 
         function = self._create_semantic_function(
             skill_name, function_name, function_config
@@ -645,8 +642,6 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
     ) -> Dict[str, SKFunctionBase]:
         MODULE_NAME = "native_function"
 
-        validate_skill_name(skill_directory_name)
-
         skill_directory = os.path.abspath(
             os.path.join(parent_directory, skill_directory_name)
         )
@@ -658,27 +653,23 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
             )
 
         skill_name = os.path.basename(skill_directory)
-        try:
+        with contextlib.suppress(Exception):
             spec = importlib.util.spec_from_file_location(
                 MODULE_NAME, native_py_file_path
             )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
-            class_name = next(
+            if class_name := next(
                 (
                     name
                     for name, cls in inspect.getmembers(module, inspect.isclass)
                     if cls.__module__ == MODULE_NAME
                 ),
                 None,
-            )
-            if class_name:
+            ):
                 skill_obj = getattr(module, class_name)()
                 return self.import_skill(skill_obj, skill_name)
-        except Exception:
-            pass
-
         return {}
 
     def import_semantic_skill_from_directory(
@@ -686,8 +677,6 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
     ) -> Dict[str, SKFunctionBase]:
         CONFIG_FILE = "config.json"
         PROMPT_FILE = "skprompt.txt"
-
-        validate_skill_name(skill_directory_name)
 
         skill_directory = os.path.join(parent_directory, skill_directory_name)
         skill_directory = os.path.abspath(skill_directory)
@@ -764,10 +753,6 @@ class Kernel(SKGenericModel, Generic[SkillCollectionT]):
                 stop_sequences=stop_sequences if stop_sequences is not None else [],
             ),
         )
-
-        validate_function_name(function_name)
-        if skill_name is not None:
-            validate_skill_name(skill_name)
 
         template = PromptTemplate(
             template=prompt_template,

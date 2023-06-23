@@ -10,12 +10,9 @@ from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 
 
 class Block(SKBaseModel):
-    content: str = ""
+    content: pdt.constr(strip_whitespace=True) = ""
     logger: SKLogger = pdt.Field(default_factory=NullLogger)
     type: BlockTypes = BlockTypes.UNDEFINED
-
-    class Config:
-        allow_mutation = False
 
     def is_valid(self) -> Tuple[bool, str]:
         raise NotImplementedError("Subclasses must implement this method.")

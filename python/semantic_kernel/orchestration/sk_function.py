@@ -6,6 +6,8 @@ from enum import Enum
 from logging import Logger
 from typing import Any, Callable, Generic, List, Optional, cast
 
+import pydantic as pdt
+
 from semantic_kernel.connectors.ai.chat_completion_client_base import (
     ChatCompletionClientBase,
 )
@@ -16,6 +18,7 @@ from semantic_kernel.connectors.ai.complete_request_settings import (
 from semantic_kernel.connectors.ai.text_completion_client_base import (
     TextCompletionClientBase,
 )
+from semantic_kernel.constants import FUNCTION_NAME_REGEX, SKILL_NAME_REGEX
 from semantic_kernel.kernel_exception import KernelException
 from semantic_kernel.logging_ import NullLogger
 from semantic_kernel.memory.null_memory import NullMemory
@@ -26,6 +29,7 @@ from semantic_kernel.orchestration.delegate_inference import DelegateInference
 from semantic_kernel.orchestration.delegate_types import DelegateTypes
 from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
+from semantic_kernel.pydantic_ import SKGenericModel
 from semantic_kernel.semantic_functions.chat_prompt_template import ChatPromptTemplate
 from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
@@ -38,27 +42,37 @@ from semantic_kernel.skill_definition.read_only_skill_collection import (
 )
 
 
-class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
+class SKFunction(SKGenericModel, SKFunctionBase, Generic[SkillCollectionT]):
     """Semantic Kernel function.
 
     IMPORTANT:
-        This class cannot be serialized. Even if it is serialized, it cannot be
-        used across language boundaries. It is only meant to be used within the
-        same session.
+        This class is not entirely serializable. The delegate_function is excluded
+        from the serialization process as it cannot transcend programming language
+        boundaries.
     """
 
-    _parameters: List[ParameterView]
-    _delegate_type: DelegateTypes
-    _function: Callable[..., Any]
-    _skill_collection: Optional[ReadOnlySkillCollection[SkillCollectionT]]
-    _log: Logger
-    _ai_service: Optional[TextCompletionClientBase]
-    _ai_request_settings: CompleteRequestSettings
-    _chat_service: Optional[ChatCompletionClientBase]
-    _chat_request_settings: ChatRequestSettings
+    delegate_type: DelegateTypes
+    delegate_function: Callable[..., Any] = pdt.Field(exclude=True)
+    parameters: List[ParameterView]
+    description_: str = pdt.Field(alias="description")
+    skill_name_: str = pdt.Field(alias="skill_name", regex=SKILL_NAME_REGEX)
+    function_name: str = pdt.Field(regex=FUNCTION_NAME_REGEX)
+    is_semantic_: bool = pdt.Field(alias="is_semantic")
+    _logger: Logger = pdt.Field(alias="logger", default_factory=NullLogger)
+    _skill_collection: Optional[
+        ReadOnlySkillCollection[SkillCollectionT]
+    ] = pdt.PrivateAttr(None)
+    _ai_service: Optional[TextCompletionClientBase] = pdt.PrivateAttr(None)
+    _ai_request_settings: Optional[CompleteRequestSettings] = pdt.PrivateAttr(
+        default_factory=CompleteRequestSettings
+    )
+    _chat_service: Optional[ChatCompletionClientBase] = pdt.PrivateAttr(None)
+    _chat_request_settings: Optional[ChatRequestSettings] = pdt.PrivateAttr(
+        default_factory=ChatRequestSettings
+    )
 
-    @staticmethod
-    def from_native_method(method, skill_name="", log=None) -> "SKFunction":
+    @classmethod
+    def from_native_method(cls, method, skill_name="", log=None) -> "SKFunction":
         if method is None:
             raise ValueError("Method cannot be `None`")
 
@@ -80,10 +94,9 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
                 )
 
         if hasattr(method, "__sk_function_input_description__"):
-            input_param = ParameterView(
-                "input",
-                method.__sk_function_input_description__,
-                method.__sk_function_input_default_value__,
+            input_param = ParameterView.from_native_method(
+                name="input",
+                method=method,
             )
             parameters = [input_param] + parameters
 
@@ -95,11 +108,12 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
             skill_name=skill_name,
             function_name=method.__sk_function_name__,
             is_semantic=False,
-            log=log,
+            logger=log,
         )
 
-    @staticmethod
+    @classmethod
     def from_semantic_config(
+        cls,
         skill_name: str,
         function_name: str,
         function_config: SemanticFunctionConfig,
@@ -152,7 +166,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
             skill_name=skill_name,
             function_name=function_name,
             is_semantic=True,
-            log=log,
+            logger=log,
         )
 
     @property
@@ -182,31 +196,6 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
     @property
     def request_settings(self) -> CompleteRequestSettings:
         return self._ai_request_settings
-
-    def __init__(
-        self,
-        delegate_type: DelegateTypes,
-        delegate_function: Callable[..., Any],
-        parameters: List[ParameterView],
-        description: str,
-        skill_name: str,
-        function_name: str,
-        is_semantic: bool,
-        log: Optional[Logger] = None,
-    ) -> None:
-        self._delegate_type = delegate_type
-        self._function = delegate_function
-        self._parameters = parameters
-        self._description = description
-        self._skill_name = skill_name
-        self._name = function_name
-        self._is_semantic = is_semantic
-        self._log = log if log is not None else NullLogger()
-        self._skill_collection = None
-        self._ai_service = None
-        self._ai_request_settings = CompleteRequestSettings()
-        self._chat_service = None
-        self._chat_request_settings = ChatRequestSettings()
 
     def set_default_skill_collection(
         self, skills: ReadOnlySkillCollection[SkillCollectionT]
@@ -287,7 +276,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
                 variables=ContextVariables("") if variables is None else variables,
                 skill_collection=self._skill_collection,
                 memory=memory if memory is not None else NullMemory.instance,
-                logger=log if log is not None else self._log,
+                logger=log if log is not None else self._logger,
             )
         else:
             # If context is passed, we need to merge the variables
@@ -331,7 +320,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
                 variables=ContextVariables("") if variables is None else variables,
                 skill_collection=self._skill_collection,
                 memory=memory if memory is not None else NullMemory.instance,
-                logger=log if log is not None else self._log,
+                logger=log if log is not None else self._logger,
             )
         else:
             # If context is passed, we need to merge the variables
@@ -392,7 +381,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
         if self._is_semantic:
             return
 
-        self._log.error("The function is not semantic")
+        self._logger.error("The function is not semantic")
         raise KernelException(
             KernelException.ErrorCodes.InvalidFunctionType,
             "Invalid operation, the method requires a semantic function",
@@ -402,7 +391,7 @@ class SKFunction(SKFunctionBase, Generic[SkillCollectionT]):
         if not self._is_semantic:
             return
 
-        self._log.error("The function is not native")
+        self._logger.error("The function is not native")
         raise KernelException(
             KernelException.ErrorCodes.InvalidFunctionType,
             "Invalid operation, the method requires a native function",
