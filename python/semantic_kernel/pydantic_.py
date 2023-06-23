@@ -11,6 +11,8 @@ from pydantic.parse import Protocol
 from pydantic.types import StrBytes
 from pydantic.utils import to_lower_camel
 
+from semantic_kernel.logging_ import NullLogger, SKLogger
+
 
 class PydanticField(abc.ABC):
     """Subclass this class to make your class a valid pydantic field type.
@@ -63,6 +65,26 @@ _JSON_ENCODERS: t.Final[t.Dict[t.Type[t.Any], t.Callable[[t.Any], str]]] = {
 
 class SKBaseModel(pdt.BaseModel):
     """Base class for all pydantic models in the SK."""
+
+    logger: SKLogger = pdt.Field(default_factory=NullLogger)
+
+    @pdt.validator("logger", pre=True)
+    def _validate_logger(cls, v: t.Any) -> SKLogger:
+        """Validate the logger."""
+        if v is None:
+            return NullLogger()
+        if isinstance(v, str):
+            try:
+                v = json.loads(v)
+            except json.JSONDecodeError as e:
+                raise ValueError(
+                    f"Expected logger to be an SKLogger, but got {type(v)}."
+                ) from e
+        if isinstance(v, dict):
+            return SKLogger(**v)
+        if isinstance(v, SKLogger):
+            return v
+        raise ValueError(f"Expected logger to be an SKLogger, but got {type(v)}.")
 
     class Config:
         """Pydantic configuration."""

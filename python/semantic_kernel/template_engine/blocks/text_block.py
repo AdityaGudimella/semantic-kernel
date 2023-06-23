@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from logging import Logger
 from typing import Optional, Tuple
 
+from semantic_kernel.logging_ import SKLogger
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
@@ -10,12 +10,13 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class TextBlock(Block, TextRenderer):
-    def __init__(
-        self,
-        text: Optional[str] = None,
+    @classmethod
+    def from_text(
+        cls,
+        text: str = "",
         start_index: Optional[int] = None,
         stop_index: Optional[int] = None,
-        log: Optional[Logger] = None,
+        logger: Optional[SKLogger] = None,
     ):
         if start_index is not None and stop_index is not None:
             if start_index > stop_index:
@@ -33,7 +34,7 @@ class TextBlock(Block, TextRenderer):
         elif stop_index is not None:
             text = text[:stop_index]
 
-        super().__init__(content=text, log=log)
+        return cls(content=text, logger=logger)
 
     @property
     def type(self) -> BlockTypes:

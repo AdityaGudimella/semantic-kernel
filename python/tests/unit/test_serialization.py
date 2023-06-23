@@ -59,6 +59,7 @@ from semantic_kernel.core_skills.text_memory_skill import TextMemorySkill
 from semantic_kernel.core_skills.text_skill import TextSkill
 from semantic_kernel.core_skills.time_skill import TimeSkill
 from semantic_kernel.kernel import Kernel
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.memory.memory_query_result import MemoryQueryResult
 from semantic_kernel.memory.memory_record import MemoryRecord
 from semantic_kernel.memory.memory_store_base import MemoryStoreBase
@@ -73,7 +74,7 @@ from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
 from semantic_kernel.planning.plan import Plan
-from semantic_kernel.pydantic_ import PydanticField
+from semantic_kernel.pydantic_ import PydanticField, SKBaseModel
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
@@ -88,7 +89,7 @@ from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
 from semantic_kernel.serialization import from_json, to_json
-from semantic_kernel.settings import KernelSettings
+from semantic_kernel.settings import AzureOpenAISettings, KernelSettings
 from semantic_kernel.skill_definition.function_view import FunctionView
 from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
@@ -102,6 +103,7 @@ from semantic_kernel.template_engine.blocks.block_types import BlockTypes
 from semantic_kernel.template_engine.blocks.code_block import CodeBlock
 from semantic_kernel.template_engine.blocks.function_id_block import FunctionIdBlock
 from semantic_kernel.template_engine.blocks.symbols import Symbols
+from semantic_kernel.template_engine.blocks.text_block import TextBlock
 from semantic_kernel.template_engine.code_tokenizer import CodeTokenizer
 from semantic_kernel.template_engine.prompt_template_engine import PromptTemplateEngine
 from semantic_kernel.template_engine.protocols.code_renderer import CodeRenderer
@@ -292,6 +294,7 @@ def serializable(
         AzureChatCompletion: AzureChatCompletion(
             deployment="gpt-3.5-turbo", settings=kernel_settings.azure_openai
         ),
+        AzureOpenAISettings: kernel_settings.azure_openai,
         AzureTextEmbedding: AzureTextEmbedding(
             deployment="text-embedding-ada-002", settings=kernel_settings.azure_openai
         ),
@@ -330,6 +333,7 @@ def serializable(
             MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
             relevance=0.9,
         ),
+        NullLogger: NullLogger(),
         OpenAITextCompletion: OpenAITextCompletion(
             model_id="text-davinci-003", settings=kernel_settings.openai
         ),
@@ -377,6 +381,7 @@ def serializable(
                 model_id="text-embedding-ada-002", settings=kernel_settings.openai
             ),
         ),
+        SKBaseModel: SKBaseModel(),
         SKContext: SKContext(
             variables=ContextVariables(),
             memory=SemanticTextMemory(
@@ -388,7 +393,9 @@ def serializable(
             skill_collection=SkillCollection().read_only_skill_collection,
         ),
         SkillCollection: SkillCollection(),
+        SKLogger: SKLogger(settings=kernel_settings.logging),
         TemplateTokenizer: TemplateTokenizer(),
+        TextBlock: TextBlock.from_text("foo", 0, 2),
         VolatileMemoryStore: VolatileMemoryStore(),
     }
     return cls_obj_map[serializable_type]
@@ -471,6 +478,9 @@ def _recursive_eq(
     [
         # pytest.param(Kernel, marks=pytest.mark.xfail(reason="Not implemented")),
         # Kernel,
+        SKLogger,
+        SKBaseModel,
+        AzureOpenAISettings,
         AzureChatCompletion,
         AzureTextCompletion,
         AzureTextEmbedding,
@@ -489,6 +499,7 @@ def _recursive_eq(
         HuggingFaceTextCompletion,
         HuggingFaceTextEmbedding,
         MemoryRecord,
+        NullLogger,
         OpenAIChatCompletion,
         OpenAITextCompletion,
         OpenAITextEmbedding,
@@ -503,6 +514,7 @@ def _recursive_eq(
         SKContext,
         SkillCollection,
         TemplateTokenizer,
+        TextBlock,
         VolatileMemoryStore,
         pytest.param(
             WeaviateMemoryStore,

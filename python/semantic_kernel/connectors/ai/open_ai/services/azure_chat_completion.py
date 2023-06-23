@@ -32,14 +32,17 @@ class AzureChatCompletion(
     settings: AzureOpenAISettings = pdt.Field(
         description="Azure OpenAI settings. See: semantic_kernel.settings.AzureOpenAISettings"  # noqa: E501
     )
-    _openai_chat_completion: OpenAIChatCompletion = pdt.PrivateAttr()
+    _openai_chat_completion: OpenAIChatCompletion = pdt.PrivateAttr(None)
 
-    def __init__(self, **data: t.Any) -> None:
-        super().__init__(**data)
-        self._openai_chat_completion = OpenAIChatCompletion(
-            model_id=self.deployment,
-            settings=self.settings.openai_settings,
-        )
+    @property
+    def openai_chat_completion(self) -> OpenAIChatCompletion:
+        """Get the OpenAI chat completion client."""
+        if self._openai_chat_completion is None:
+            self._openai_chat_completion = OpenAIChatCompletion(
+                model_id=self.deployment,
+                settings=self.settings.openai_settings,
+            )
+        return self._openai_chat_completion
 
     # TODO: Figure out expected return type hint
     async def complete_chat_async(self, *args: t.Any, **kwargs: t.Any) -> t.Any:

@@ -114,7 +114,9 @@ class PromptTemplateEngine(SKBaseModel, PromptTemplatingEngine):
                 continue
             if not isinstance(block, TextRenderer):
                 raise ValueError("TextBlock must implement TextRenderer protocol")
-            rendered_blocks.append(TextBlock(block.render(variables), log=self.logger))
+            rendered_blocks.append(
+                TextBlock.from_text(block.render(variables), log=self.logger)
+            )
 
         return rendered_blocks
 

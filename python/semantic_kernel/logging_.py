@@ -5,8 +5,6 @@ import typing as t
 
 import pydantic as pdt
 
-from semantic_kernel.pydantic_ import SKBaseModel
-
 LogLevels = t.Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
@@ -40,7 +38,7 @@ class LoggerSettings(pdt.BaseSettings):
         return logger
 
 
-class SKLogger(SKBaseModel):
+class SKLogger(pdt.BaseModel):
     """API for logging."""
 
     name: str = pdt.Field(
@@ -51,27 +49,33 @@ class SKLogger(SKBaseModel):
         default_factory=LoggerSettings,
         description="Settings to configure logging for SemanticKernel.",
     )
-    _logger: logging.Logger = pdt.PrivateAttr()
+    _logger: logging.Logger = pdt.PrivateAttr(None)
 
-    def __init__(self, **data: t.Any) -> None:
-        """Initialize the logger."""
-        super().__init__(**data)
-        self._logger = self.settings.get_logger(data.get("name", "semantic_kernel"))
+    class Config:
+        """Pydantic configuration."""
+
+        allow_mutation = False
+
+    @property
+    def logger(self) -> logging.Logger:
+        if self._logger is None:
+            self._logger = self.settings.get_logger(self.name)
+        return self._logger
 
     def info(self, *args: t.Any, **kwargs: t.Any) -> None:
-        return self._logger.info(*args, **kwargs)
+        return self.logger.info(*args, **kwargs)
 
     def debug(self, *args: t.Any, **kwargs: t.Any) -> None:
-        return self._logger.debug(*args, **kwargs)
+        return self.logger.debug(*args, **kwargs)
 
     def warning(self, *args: t.Any, **kwargs: t.Any) -> None:
-        return self._logger.warning(*args, **kwargs)
+        return self.logger.warning(*args, **kwargs)
 
     def error(self, *args: t.Any, **kwargs: t.Any) -> None:
-        return self._logger.error(*args, **kwargs)
+        return self.logger.error(*args, **kwargs)
 
     def critical(self, *args: t.Any, **kwargs: t.Any) -> None:
-        return self._logger.critical(*args, **kwargs)
+        return self.logger.critical(*args, **kwargs)
 
 
 class NullLogger(SKLogger):

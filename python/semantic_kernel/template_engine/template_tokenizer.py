@@ -41,11 +41,11 @@ class TemplateTokenizer(SKBaseModel):
 
         # Render None/empty to ""
         if not text or text == "":
-            return [TextBlock("", log=self.logger)]
+            return [TextBlock.from_text("", log=self.logger)]
 
         # If the template is "empty" return it as a text block
         if len(text) < MIN_CODE_BLOCK_LENGTH:
-            return [TextBlock(text, log=self.logger)]
+            return [TextBlock.from_text(text, log=self.logger)]
 
         blocks = []
         end_of_last_block = 0
