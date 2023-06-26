@@ -24,7 +24,7 @@ from semantic_kernel.settings import (
     load_settings,
 )
 
-__version__ = "0.2.8.dev"
+__version__ = "0.3.1.dev"
 
 REPO_ROOT: t.Final[Path] = Path(__file__).parent.parent.parent
 PYTHON_REPO_ROOT: t.Final[Path] = REPO_ROOT / "python"
