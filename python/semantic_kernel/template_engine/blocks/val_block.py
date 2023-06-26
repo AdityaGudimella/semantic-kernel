@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-import contextlib
 import warnings
 from typing import Any, Optional, Tuple
 
@@ -14,9 +13,10 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class ValBlock(Block, TextRenderer):
-    _first: str = pdt.PrivateAttr(default="\0")
-    _last: str = pdt.PrivateAttr(default="\0")
-    _value: str = pdt.PrivateAttr(default="")
+    type: BlockTypes = BlockTypes.VALUE
+    _first: str = pdt.PrivateAttr(default=None)
+    _last: str = pdt.PrivateAttr(default=None)
+    _value: str = pdt.PrivateAttr(default=None)
 
     @pdt.validator("content")
     def _validate_content(cls, v: Any) -> str:
@@ -33,22 +33,27 @@ class ValBlock(Block, TextRenderer):
                 "Cannot mix single quotes and double quotes in a value definition"
             )
         else:
-            return v
+            return v.strip()
         error_msg += f": {v}"
-        warnings.warn(error_msg)
-        return v.strip()
-
-    def __init__(self, **data: Any):
-        super().__init__(**data)
-
-        with contextlib.suppress(IndexError):
-            self._first = self.content[0]
-            self._last = self.content[-1]
-            self._value = self.content[1:-1]
+        raise ValueError(error_msg)
 
     @property
-    def type(self) -> BlockTypes:
-        return BlockTypes.VALUE
+    def first(self) -> str:
+        if self._first is None:
+            self._first = self.content[0]
+        return self._first
+
+    @property
+    def last(self) -> str:
+        if self._last is None:
+            self._last = self.content[-1]
+        return self._last
+
+    @property
+    def value(self) -> str:
+        if self._value is None:
+            self._value = self.content[1:-1]
+        return self._value
 
     def is_valid(self) -> Tuple[bool, str]:
         with warnings.catch_warnings():
@@ -59,12 +64,4 @@ class ValBlock(Block, TextRenderer):
         return True, ""
 
     def render(self, _: Optional[ContextVariables] = None) -> str:
-        return self._value
-
-    @staticmethod
-    def has_val_prefix(text: Optional[str]) -> bool:
-        return (
-            text is not None
-            and len(text) > 0
-            and text[0] in (Symbols.DBL_QUOTE, Symbols.SGL_QUOTE)
-        )
+        return self.value
