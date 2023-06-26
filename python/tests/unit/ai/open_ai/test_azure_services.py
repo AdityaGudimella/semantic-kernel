@@ -42,45 +42,6 @@ def test_initialization_with_bad_params_raises_error(
         service(deployment=deployment_name, settings=azure_openai_settings)
 
 
-@pytest.mark.parametrize(
-    "endpoint", ["https://test-endpoint.com", "test-endpoint.com/", "", None]
-)
-@pytest.mark.parametrize("api_key", ["test_api_key", "", None])
-def test_settings_validation(endpoint: str, api_key: str) -> None:
-    """Ensure that the settings are validated on init."""
-    if endpoint == "https://test-endpoint.com" and api_key == "test_api_key":
-        pytest.skip("Valid settings")
-    with pytest.raises(pdt.ValidationError):
-        AzureOpenAISettings(
-            api_key=api_key,  # type: ignore
-            api_version="api_version",
-            endpoint=endpoint,
-        )
-
-
-class _MockOpenAI:
-    class Embedding:
-        @staticmethod
-        async def acreate(*args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
-            return {"data": {"embedding": [1, 2, 3]}}
-
-    class Completion:
-        @staticmethod
-        async def acreate(*args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
-            return {"choices": [{"text": "test"}]}
-
-    class ChatCompletion:
-        @staticmethod
-        async def acreate(*args: t.Any, **kwargs: t.Any) -> t.Dict[str, t.Any]:
-            return {"choices": [{"text": "test"}]}
-
-    def __enter__(self) -> "_MockOpenAI":
-        return self
-
-    def __exit__(self, *args: t.Any) -> None:
-        pass
-
-
 class _DotDict(dict):
     def __getattr__(self, name: str) -> t.Any:
         if name in self:

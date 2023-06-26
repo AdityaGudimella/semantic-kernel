@@ -2,11 +2,12 @@
 from logging import getLevelName
 
 import numpy as np
+import pydantic as pdt
 import pytest
 
 from semantic_kernel.connectors.ai.openai.azure_ import AzureTextEmbedding
 from semantic_kernel.connectors.ai.openai.openai_ import OpenAITextEmbedding
-from semantic_kernel.settings import KernelSettings, load_settings
+from semantic_kernel.settings import AzureOpenAISettings, KernelSettings, load_settings
 
 
 def test_load_settings() -> None:
@@ -48,3 +49,19 @@ async def test_azure_openai_settings(kernel_settings: KernelSettings) -> None:
     )
     result = await test_model.generate_embeddings_async(["test"])
     assert isinstance(result, np.ndarray)
+
+
+@pytest.mark.parametrize(
+    "endpoint", ["https://test-endpoint.com", "test-endpoint.com/", "", None]
+)
+@pytest.mark.parametrize("api_key", ["test_api_key", "", None])
+def test_settings_validation(endpoint: str, api_key: str) -> None:
+    """Ensure that the settings are validated on init."""
+    if endpoint == "https://test-endpoint.com" and api_key == "test_api_key":
+        pytest.skip("Valid settings")
+    with pytest.raises(pdt.ValidationError):
+        AzureOpenAISettings(
+            api_key=api_key,  # pyright: ignore[reportGeneralTypeIssues]
+            api_version="api_version",
+            endpoint=endpoint,
+        )
