@@ -3,7 +3,7 @@
 import pytest
 
 import semantic_kernel as sk
-import semantic_kernel.connectors.ai.open_ai as sk_oai
+import semantic_kernel.connectors.ai.openai.openai_ as sk_oai
 
 
 @pytest.mark.asyncio

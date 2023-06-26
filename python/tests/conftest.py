@@ -5,7 +5,8 @@ import typing as t
 import pytest
 
 import semantic_kernel as sk
-import semantic_kernel.connectors.ai.open_ai as sk_oai
+import semantic_kernel.connectors.ai.openai as sk_oai
+from semantic_kernel.connectors.ai.openai import openai_
 from semantic_kernel.logging_ import LoggerSettings, SKLogger
 from semantic_kernel.settings import (
     AzureOpenAISettings,
@@ -45,7 +46,7 @@ def azure_openai_settings(kernel_settings: KernelSettings) -> AzureOpenAISetting
 def mock_azure_openai_settings() -> AzureOpenAISettings:
     """Returns a mock Azure OpenAI config that will not work with actual API."""
     return AzureOpenAISettings(
-        api_key="test_api_key",
+        api_key="test_api_key",  # pyright: ignore[reportGeneralTypeIssues]
         endpoint="https://test-endpoint.com",
         api_version="2023-03-15-preview",
     )
@@ -92,7 +93,7 @@ def kernel(
     else:
         kernel.add_text_completion_service(
             service_type,
-            sk_oai.OpenAITextCompletion(
+            openai_.OpenAITextCompletion(
                 model_id="text-davinci-003", settings=openai_settings
             ),
         )
@@ -115,7 +116,9 @@ def prompt_template(
 ) -> sk.PromptTemplate:
     if service_type == "chat":
         prompt_template = sk.ChatPromptTemplate(
-            "{{$user_input}}", kernel.prompt_template_engine, prompt_config
+            template="{{$user_input}}",
+            template_engine=kernel.prompt_template_engine,
+            prompt_config=prompt_config,
         )
 
         system_message = """
@@ -143,7 +146,9 @@ def prompt_template(
         ChatBot:>
         """
         return sk.PromptTemplate(
-            sk_prompt, kernel.prompt_template_engine, prompt_config
+            template=sk_prompt,
+            template_engine=kernel.prompt_template_engine,
+            prompt_config=prompt_config,
         )
     else:
         raise ValueError(f"Invalid service type: {service_type}")
@@ -155,7 +160,9 @@ def chat_function(
     prompt_config: sk.PromptTemplateConfig,
     prompt_template: sk.PromptTemplate,
 ) -> sk.SKFunctionBase:
-    function_config = sk.SemanticFunctionConfig(prompt_config, prompt_template)
+    function_config = sk.SemanticFunctionConfig(
+        prompt_template_config=prompt_config, prompt_template=prompt_template
+    )
     return kernel.register_semantic_function("ChatBot", "Chat", function_config)
 
 

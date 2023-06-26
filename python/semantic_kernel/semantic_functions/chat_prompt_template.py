@@ -30,7 +30,14 @@ class ChatPromptTemplate(PromptTemplate):
 
     def add_message(self, role: str, message: str) -> None:
         self._messages.append(
-            (role, PromptTemplate(message, self.template_engine, self.prompt_config))
+            (
+                role,
+                PromptTemplate(
+                    template=message,
+                    template_engine=self.template_engine,
+                    prompt_config=self.prompt_config,
+                ),
+            )
         )
 
     async def render_messages_async(

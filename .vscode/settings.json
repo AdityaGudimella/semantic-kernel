@@ -98,5 +98,5 @@
   "[python]": {
     "editor.defaultFormatter": "trunk.io"
   },
-  "python.analysis.typeCheckingMode": "off"
+  "python.analysis.typeCheckingMode": "basic"
 }

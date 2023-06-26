@@ -4,12 +4,8 @@ from logging import getLevelName
 import numpy as np
 import pytest
 
-from semantic_kernel.connectors.ai.open_ai.services.azure_text_embedding import (
-    AzureTextEmbedding,
-)
-from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding import (
-    OpenAITextEmbedding,
-)
+from semantic_kernel.connectors.ai.openai.azure_ import AzureTextEmbedding
+from semantic_kernel.connectors.ai.openai.openai_ import OpenAITextEmbedding
 from semantic_kernel.settings import KernelSettings, load_settings
 
 

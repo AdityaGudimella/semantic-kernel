@@ -8,7 +8,6 @@ import pydantic as pdt
 import pytest
 import typing_extensions as te
 
-import semantic_kernel as sk
 from semantic_kernel.connectors.ai.chat_completion_client_base import (
     ChatCompletionClientBase,
 )
@@ -25,22 +24,14 @@ from semantic_kernel.connectors.ai.hugging_face.services.hf_text_completion impo
 from semantic_kernel.connectors.ai.hugging_face.services.hf_text_embedding import (
     HuggingFaceTextEmbedding,
 )
-from semantic_kernel.connectors.ai.open_ai.services.azure_chat_completion import (
+from semantic_kernel.connectors.ai.openai.azure_ import (
     AzureChatCompletion,
-)
-from semantic_kernel.connectors.ai.open_ai.services.azure_text_completion import (
     AzureTextCompletion,
-)
-from semantic_kernel.connectors.ai.open_ai.services.azure_text_embedding import (
     AzureTextEmbedding,
 )
-from semantic_kernel.connectors.ai.open_ai.services.open_ai_chat_completion import (
+from semantic_kernel.connectors.ai.openai.openai_ import (
     OpenAIChatCompletion,
-)
-from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_completion import (
     OpenAITextCompletion,
-)
-from semantic_kernel.connectors.ai.open_ai.services.open_ai_text_embedding import (
     OpenAITextEmbedding,
 )
 from semantic_kernel.connectors.ai.text_completion_client_base import (
@@ -74,7 +65,7 @@ from semantic_kernel.orchestration.sk_context import SKContext
 from semantic_kernel.orchestration.sk_function_base import SKFunctionBase
 from semantic_kernel.planning.basic_planner import BasicPlanner
 from semantic_kernel.planning.plan import Plan
-from semantic_kernel.pydantic_ import PydanticField, SKBaseModel, SKGenericModel
+from semantic_kernel.pydantic_ import PydanticField, SKBaseModel
 from semantic_kernel.reliability.pass_through_without_retry import (
     PassThroughWithoutRetry,
 )
@@ -88,13 +79,11 @@ from semantic_kernel.semantic_functions.prompt_template_config import (
 from semantic_kernel.semantic_functions.semantic_function_config import (
     SemanticFunctionConfig,
 )
-from semantic_kernel.serialization import from_json, to_json
 from semantic_kernel.settings import AzureOpenAISettings, KernelSettings
 from semantic_kernel.skill_definition.function_view import FunctionView
 from semantic_kernel.skill_definition.functions_view import FunctionsView
 from semantic_kernel.skill_definition.read_only_skill_collection import (
     ReadOnlySkillCollection,
-    SkillCollectionT,
 )
 from semantic_kernel.skill_definition.sk_function_decorator import sk_function
 from semantic_kernel.skill_definition.skill_collection import SkillCollection
@@ -175,7 +164,8 @@ class _Serializable(t.Protocol):
         """Return a JSON representation of the object."""
         raise NotImplementedError
 
-    def parse_raw(self: te.Self, json: pdt.Json) -> te.Self:
+    @classmethod
+    def parse_raw(cls: t.Type[te.Self], json: pdt.Json) -> te.Self:
         """Return the constructed object from a JSON representation."""
         raise NotImplementedError
 
@@ -202,16 +192,21 @@ def serializable(
         """A test function."""
         return f"F({cx.variables.input})"
 
+    azure_settings = kernel_settings.azure_openai
+    assert azure_settings is not None
     cls_obj_map = {
         AzureTextCompletion: AzureTextCompletion(
-            deployment="text-davinci-003", settings=kernel_settings.azure_openai
+            deployment="text-davinci-003", settings=azure_settings
         ),
         AzureChatCompletion: AzureChatCompletion(
-            deployment="gpt-3.5-turbo", settings=kernel_settings.azure_openai
+            deployment="gpt-3.5-turbo", settings=azure_settings
         ),
-        AzureOpenAISettings: kernel_settings.azure_openai,
+        AzureOpenAISettings: AzureOpenAISettings(
+            api_key="test",  # pyright: ignore[reportGeneralTypeIssues]
+            endpoint="https://test",
+        ),
         AzureTextEmbedding: AzureTextEmbedding(
-            deployment="text-embedding-ada-002", settings=kernel_settings.azure_openai
+            deployment="text-embedding-ada-002", settings=azure_settings
         ),
         Block: Block(),
         ChatPromptTemplate: ChatPromptTemplate(
@@ -243,9 +238,15 @@ def serializable(
             model_id="EleutherAI/gpt-neo-2.7B"
         ),
         Kernel[NullMemory, SkillCollection, PromptTemplateEngine]: Kernel(),
-        MemoryRecord: MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
+        MemoryRecord: MemoryRecord(  # pyright: ignore[reportGeneralTypeIssues]
+            id_="foo",  # pyright: ignore[reportGeneralTypeIssues]
+            embedding=[1.0, 2.3, 4.5],
+        ),
         MemoryQueryResult: MemoryQueryResult.from_memory_record(
-            MemoryRecord(id_="foo", embedding=[1.0, 2.3, 4.5]),
+            MemoryRecord(  # pyright: ignore[reportGeneralTypeIssues]
+                id_="foo",  # pyright: ignore[reportGeneralTypeIssues]
+                embedding=[1.0, 2.3, 4.5],
+            ),
             relevance=0.9,
         ),
         NullLogger: NullLogger(),
@@ -347,9 +348,7 @@ def _recursive_eq(
     with contextlib.suppress(ValueError):
         if exp == act:
             return True
-    if not isinstance(
-        exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings, pdt.SecretField, dict)
-    ):
+    if not isinstance(exp, (pdt.BaseModel, pdt.BaseSettings, pdt.SecretField, dict)):
         pytest.fail(f"Expected: {exp}, but got: {act}")
     if isinstance(exp, pdt.SecretField):
         if not isinstance(act, (str, type(exp))):
@@ -359,13 +358,17 @@ def _recursive_eq(
         # Pydantic `SecretField` objects are not serialized, and so should not be
         # compared for equality.
         return True
-    if isinstance(exp, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings)):
-        if not isinstance(act, (pdt.BaseModel, pdt.BaseConfig, pdt.BaseSettings)):
+    if isinstance(exp, (pdt.BaseModel, pdt.BaseSettings)):
+        if not isinstance(act, (pdt.BaseModel, pdt.BaseSettings)):
             pytest.fail(
                 f"Expected object of type {type(exp)}, but got object of type {type(act)}"
             )
         exp = exp.dict()
         act = act.dict()
+    if not isinstance(act, type(exp)):
+        pytest.fail(
+            f"Expected object of type {type(exp)}, but got object of type {type(act)}"
+        )
     for key in exp:
         if key not in act:
             pytest.fail(
@@ -450,4 +453,6 @@ def test_serialization(
     serialized = serializable.json()
     assert isinstance(serialized, str), serialized
     deserialized = serializable_type.parse_raw(serialized)
-    assert _recursive_eq(serializable, deserialized)
+    assert _recursive_eq(
+        serializable, deserialized  # pyright: ignore[reportGeneralTypeIssues]
+    )

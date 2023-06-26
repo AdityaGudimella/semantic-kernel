@@ -6,7 +6,7 @@ import pytest
 from test_utils import retry
 
 import semantic_kernel as sk
-import semantic_kernel.connectors.ai.open_ai as sk_oai
+from semantic_kernel.connectors.ai import openai as sk_oai
 from semantic_kernel.core_skills.conversation_summary_skill import (
     ConversationSummarySkill,
 )

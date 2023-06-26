@@ -26,6 +26,7 @@ class MemoryRecord(SKBaseModel):
     )
     # TODO(ADI): Why don't these optional fields haved default values?
     external_source_name: t.Optional[str] = pdt.Field(
+        default=None,
         description="The name of the external source.",
     )
     id_: str = pdt.Field(
@@ -33,15 +34,19 @@ class MemoryRecord(SKBaseModel):
         description="A unique for the record.",
     )
     description: t.Optional[str] = pdt.Field(
+        default=None,
         description="The description of the record.",
     )
     text: t.Optional[str] = pdt.Field(
+        default=None,
         description="The text of the record.",
     )
     additional_metadata: t.Optional[str] = pdt.Field(
+        default=None,
         description="Custom metadata for the record.",
     )
     embedding: t.Optional[PydanticNDArray] = pdt.Field(
+        default=None,
         description="The embedding of the record.",
     )
 
@@ -65,10 +70,10 @@ class MemoryRecord(SKBaseModel):
         Returns:
             MemoryRecord -- The reference record.
         """
-        return MemoryRecord(
+        return MemoryRecord(  # pyright: ignore[reportGeneralTypeIssues]
             is_reference=True,
             external_source_name=source_name,
-            id_=external_id,
+            id_=external_id,  # pyright: ignore[reportGeneralTypeIssues]
             description=description,
             text=None,
             additional_metadata=additional_metadata,
@@ -95,10 +100,10 @@ class MemoryRecord(SKBaseModel):
         Returns:
             MemoryRecord -- The local record.
         """
-        return MemoryRecord(
+        return MemoryRecord(  # pyright: ignore[reportGeneralTypeIssues]
             is_reference=False,
             external_source_name=None,
-            id_=id,
+            id_=id,  # pyright: ignore[reportGeneralTypeIssues]
             description=description,
             text=text,
             additional_metadata=additional_metadata,

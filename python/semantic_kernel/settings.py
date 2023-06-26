@@ -39,7 +39,7 @@ class OpenAISettings(SKBaseSettings):
         description="OpenAI API key. See: https://platform.openai.com/account/api-keys",
     )
     org_id: t.Optional[str] = pdt.Field(
-        None,
+        default=None,
         description=(
             "OpenAI organization ID."
             + " See: https://platform.openai.com/account/org-settings"
@@ -58,7 +58,7 @@ class OpenAISettings(SKBaseSettings):
         None,
         description="OpenAI API endpoint. See: ?",
     )
-    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr()
+    _openai_api_kwargs: OpenAIAPIKwargs = pdt.PrivateAttr(default=None)
 
     @property
     def openai_api_kwargs(self) -> OpenAIAPIKwargs:

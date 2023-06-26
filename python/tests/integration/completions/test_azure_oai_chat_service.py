@@ -5,7 +5,7 @@ import os
 import pytest
 from test_utils import retry
 
-import semantic_kernel.connectors.ai.open_ai as sk_oai
+import semantic_kernel.connectors.ai.openai.azure_ as sk_oai
 from semantic_kernel.settings import AzureOpenAISettings
 
 
