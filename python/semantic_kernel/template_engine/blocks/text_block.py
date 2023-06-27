@@ -37,7 +37,6 @@ class TextBlock(Block, TextRenderer):
             text = text[start_index:]
         elif stop_index is not None:
             text = text[:stop_index]
-        print("--------- ", text, type(text))
         return cls(content=text, logger=logger)
 
     def is_valid(self) -> Tuple[bool, str]:

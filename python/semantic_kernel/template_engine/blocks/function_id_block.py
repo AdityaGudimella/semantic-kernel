@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 
-from re import match as re_match
+import re
 from typing import Optional, Tuple
 
 import pydantic as pdt
@@ -12,10 +12,29 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class FunctionIdBlock(Block, TextRenderer):
-    content: pdt.constr(strip_whitespace=True, min_length=1)
+    VALID_CONTENT_REGEX = r"^[a-zA-Z0-9_.]*$"
+    type: BlockTypes = BlockTypes.FUNCTION_ID
+    content: pdt.constr(
+        strip_whitespace=True, min_length=1, regex=VALID_CONTENT_REGEX
+    )  # pyright: ignore[reportGeneralTypeIssues]
 
     _skill_name: str = pdt.PrivateAttr(default=None)
     _function_name: str = pdt.PrivateAttr(default=None)
+
+    @pdt.validator("content")
+    def _validate_content(cls, v: str) -> str:
+        parts = v.split(".")
+        if len(parts) > 2:
+            raise ValueError("The function identifier can contain max one '.' ")
+        if len(parts) == 2:
+            if not parts[0]:
+                raise ValueError(
+                    "If no skill name is provided, the function identifier must not"
+                    + " start with a '.'"
+                )
+            if not parts[1]:
+                raise ValueError("The function identifier is empty")
+        return v
 
     @property
     def skill_name(self) -> str:
@@ -35,16 +54,12 @@ class FunctionIdBlock(Block, TextRenderer):
             ) = self._extract_skill_and_function_names(self.content)
         return self._function_name
 
-    @property
-    def type(self) -> BlockTypes:
-        return BlockTypes.FUNCTION_ID
-
     def is_valid(self) -> Tuple[bool, str]:
         if self.content is None or len(self.content) == 0:
             error_msg = "The function identifier is empty"
             return False, error_msg
 
-        if not re_match(r"^[a-zA-Z0-9_.]*$", self.content):
+        if not re.match(self.VALID_CONTENT_REGEX, self.content):
             # NOTE: this is not quite the same as
             # utils.validation.validate_function_name
             error_msg = (
@@ -82,9 +97,4 @@ class FunctionIdBlock(Block, TextRenderer):
     @staticmethod
     def _extract_skill_and_function_names(content: str) -> Tuple[str, str]:
         parts = content.split(".")
-        if len(parts) > 2:
-            raise ValueError(
-                f"Function name: {content} can not contain more than one dot separating"
-                + " the skill name from the function name"
-            )
-        return parts[0] if len(parts) == 2 else ""
+        return (parts[0], parts[1]) if len(parts) == 2 else ("", parts[0])

@@ -1,6 +1,4 @@
 # Copyright (c) Microsoft. All rights reserved.
-import typing as t
-
 import pydantic as pdt
 import pytest
 
