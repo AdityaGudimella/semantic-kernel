@@ -1,19 +1,12 @@
 # Copyright (c) Microsoft. All rights reserved.
+import typing as t
 
-from logging import Logger
-
-from pytest import mark, raises
+import pydantic as pdt
+import pytest
 
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
-from semantic_kernel.template_engine.blocks.symbols import Symbols
 from semantic_kernel.template_engine.blocks.var_block import VarBlock
-
-
-def test_init():
-    var_block = VarBlock(content="$test_var", log=Logger("test_logger"))
-    assert var_block.content == "$test_var"
-    assert isinstance(var_block.logger, Logger)
 
 
 def test_type_property():
@@ -21,143 +14,125 @@ def test_type_property():
     assert var_block.type == BlockTypes.VARIABLE
 
 
-def test_is_valid():
-    var_block = VarBlock(content="$test_var")
-    is_valid, error_msg = var_block.is_valid()
-    assert is_valid
-    assert error_msg == ""
+@pytest.fixture()
+def content() -> str:
+    return "$test_var"
 
 
-def test_is_valid_no_prefix():
-    var_block = VarBlock(content="test_var")
-    is_valid, error_msg = var_block.is_valid()
-    assert not is_valid
-    assert error_msg == f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
+@pytest.fixture()
+def var_block(content: str) -> VarBlock:
+    return VarBlock(content=content)
 
 
-def test_is_valid_invalid_characters():
-    var_block = VarBlock(content="$test-var")
-    is_valid, error_msg = var_block.is_valid()
-    assert not is_valid
-    assert (
-        error_msg == "The variable name 'test-var' contains invalid characters. "
-        "Only alphanumeric chars and underscore are allowed."
-    )
-
-
-def test_render():
-    var_block = VarBlock(content="$test_var")
-    context_variables = ContextVariables()
-    context_variables.set("test_var", "test_value")
-    rendered_value = var_block.render(context_variables)
-    assert rendered_value == "test_value"
-
-
-def test_render_variable_not_found():
-    var_block = VarBlock(content="$test_var")
-    context_variables = ContextVariables()
-    rendered_value = var_block.render(context_variables)
-    assert rendered_value == ""
-
-
-def test_init_empty():
-    block = VarBlock(content="$")
-
-    assert block.name == ""
-
-
-def test_it_trims_spaces():
-    assert VarBlock(content="  $x  ").content == "$x"
-
-
-def test_it_ignores_spaces_around():
-    target = VarBlock(content="  $var \n ")
-    assert target.content == "$var"
-
-
-def test_it_renders_to_empty_string_without_variables():
-    target = VarBlock(content="  $var \n ")
-    result = target.render(None)
-    assert result == ""
-
-
-def test_it_renders_to_empty_string_if_variable_is_missing():
-    target = VarBlock(content="  $var \n ")
-    variables = ContextVariables(variables={"foo": "bar"})
-    result = target.render(variables)
-    assert result == ""
-
-
-def test_it_renders_to_variable_value_when_available():
-    target = VarBlock(content="  $var \n ")
-    variables = ContextVariables(variables={"foo": "bar", "var": "able"})
-    result = target.render(variables)
-    assert result == "able"
-
-
-def test_it_throws_if_the_var_name_is_empty():
-    variables = ContextVariables(variables={"foo": "bar", "var": "able"})
-
-    with raises(ValueError):
-        target = VarBlock(content=" $ ")
-        target.render(variables)
-
-
-@mark.parametrize(
-    "name, is_valid",
+@pytest.mark.parametrize(
+    "content, expected",
     [
-        ("0", True),
-        ("1", True),
-        ("a", True),
-        ("_", True),
-        ("01", True),
-        ("01a", True),
-        ("a01", True),
-        ("_0", True),
-        ("a01_", True),
-        ("_a01", True),
-        (".", False),
-        ("-", False),
-        ("a b", False),
-        ("a\nb", False),
-        ("a\tb", False),
-        ("a\rb", False),
-        ("a.b", False),
-        ("a,b", False),
-        ("a-b", False),
-        ("a+b", False),
-        ("a~b", False),
-        ("a`b", False),
-        ("a!b", False),
-        ("a@b", False),
-        ("a#b", False),
-        ("a$b", False),
-        ("a%b", False),
-        ("a^b", False),
-        ("a*b", False),
-        ("a(b", False),
-        ("a)b", False),
-        ("a|b", False),
-        ("a{b", False),
-        ("a}b", False),
-        ("a[b", False),
-        ("a]b", False),
-        ("a:b", False),
-        ("a;b", False),
-        ("a'b", False),
-        ('a"b', False),
-        ("a<b", False),
-        ("a>b", False),
-        ("a/b", False),
-        ("a\\b", False),
+        pytest.param("$test_var", "$test_var", id="Vanilla"),
+        pytest.param("   $x  ", "$x", id="With spaces"),
+        pytest.param("$x\n", "$x", id="With new line"),
     ],
 )
-def test_it_allows_underscore_letters_and_digits(name, is_valid):
-    target = VarBlock(content=f" ${name} ")
-    variables = ContextVariables(variables={name: "value"})
-    result = target.render(variables)
+def test_content_sanitization(var_block: VarBlock, expected: str):
+    assert var_block.content == expected
 
-    assert target.is_valid()[0] == is_valid
-    if is_valid:
-        assert target.name == name
-        assert result == "value"
+
+@pytest.mark.parametrize(
+    "content, expected",
+    [
+        pytest.param("$test_var", "test_var", id="Vanilla"),
+        pytest.param("   $x  ", "x", id="With spaces"),
+        pytest.param("$x\n", "x", id="With new line"),
+        pytest.param("$0", "0"),
+        pytest.param("$1", "1"),
+        pytest.param("$a", "a"),
+        pytest.param("$_", "_"),
+        pytest.param("$01", "01"),
+        pytest.param("$01a", "01a"),
+        pytest.param("$a01", "a01"),
+        pytest.param("$_0", "_0"),
+        pytest.param("$a01_", "a01_"),
+        pytest.param("$_a01", "_a01"),
+    ],
+)
+def test_name(var_block: VarBlock, expected: str):
+    assert var_block.name == expected
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("test_var", id="No prefix"),
+        pytest.param("$test-var", id="Invalid characters"),
+        pytest.param("$", id="Empty name"),
+        pytest.param("."),
+        pytest.param("-"),
+        pytest.param("a b"),
+        pytest.param("a\nb"),
+        pytest.param("a\tb"),
+        pytest.param("a\rb"),
+        pytest.param("a.b"),
+        pytest.param("a,b"),
+        pytest.param("a-b"),
+        pytest.param("a+b"),
+        pytest.param("a~b"),
+        pytest.param("a`b"),
+        pytest.param("a!b"),
+        pytest.param("a@b"),
+        pytest.param("a#b"),
+        pytest.param("a$b"),
+        pytest.param("a%b"),
+        pytest.param("a^b"),
+        pytest.param("a*b"),
+        pytest.param("a(b"),
+        pytest.param("a)b"),
+        pytest.param("a|b"),
+        pytest.param("a{b"),
+        pytest.param("a}b"),
+        pytest.param("a[b"),
+        pytest.param("a]b"),
+        pytest.param("a:b"),
+        pytest.param("a;b"),
+        pytest.param("a'b"),
+        pytest.param('a"b'),
+        pytest.param("a<b"),
+        pytest.param("a>b"),
+        pytest.param("a/b"),
+        pytest.param("a\\b"),
+    ],
+)
+def test_invalid_construction_raises_error(content: str):
+    with pytest.raises(pdt.ValidationError):
+        VarBlock(content=content)
+
+
+@pytest.fixture()
+def context_vars_content() -> str:
+    return "input"
+
+
+@pytest.fixture()
+def context_vars(
+    context_vars_content: str, variables: t.Dict[str, str]
+) -> ContextVariables:
+    return ContextVariables(content=context_vars_content, **variables)
+
+
+@pytest.mark.parametrize(
+    "variables, expected",
+    [
+        pytest.param({"test_var": "test_value"}, "test_value", id="With one variable"),
+        pytest.param(
+            {"test_var": "exp_value", "bar": "baz"},
+            "exp_value",
+            id="With multiple variables",
+        ),
+        pytest.param({}, "", id="With no variables"),
+        pytest.param({"foo": "bar"}, "", id="With wrong variables"),
+    ],
+)
+def test_rendering(
+    var_block: VarBlock,
+    context_vars: ContextVariables,
+    expected: str,
+) -> None:
+    assert var_block.render(context_vars) == expected

@@ -14,6 +14,11 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class VarBlock(Block, TextRenderer):
+    content: pdt.constr(  # pyright: ignore[reportGeneralTypeIssues]
+        strip_whitespace=True,
+        regex=r"^\$[a-zA-Z0-9_]*$",
+    ) = ""
+    type: BlockTypes = BlockTypes.VARIABLE
     _name: str = pdt.PrivateAttr(default=None)
 
     @pdt.validator("content")
@@ -21,30 +26,21 @@ class VarBlock(Block, TextRenderer):
         if not isinstance(v, str):
             raise TypeError("content must be a string")
         if len(v) < 2:
-            warning = (
+            error_msg = (
                 f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
                 + " and have a name"
             )
         elif v[0] != Symbols.VAR_PREFIX:
-            warning = f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
+            error_msg = f"A variable must start with the symbol {Symbols.VAR_PREFIX}"
         else:
-            return v
-        warnings.warn(warning)
-        return v.strip()
+            return v.strip()
+        raise ValueError(error_msg)
 
     @property
     def name(self) -> str:
         if self._name is None:
-            if len(self.content) < 2:
-                warnings.warn("The variable name is empty")
-                self._name = ""
-            else:
-                self._name = self.content[1:]
+            self._name = self.content[1:]
         return self._name
-
-    @property
-    def type(self) -> BlockTypes:
-        return BlockTypes.VARIABLE
 
     def is_valid(self) -> Tuple[bool, str]:
         with warnings.catch_warnings():
@@ -71,8 +67,10 @@ class VarBlock(Block, TextRenderer):
             self.logger.error(error_msg)
             raise ValueError(error_msg)
 
-        exists, value = variables.get(self.name)
-        if not exists:
-            self.logger.warning(f"Variable `{Symbols.VAR_PREFIX}{self.name}` not found")
-
-        return value if exists else ""
+        try:
+            value = variables[self.name]
+        except KeyError:
+            warnings.warn(f"Variable `{Symbols.VAR_PREFIX}{self.name}` not found")
+            return ""
+        else:
+            return value
