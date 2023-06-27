@@ -105,18 +105,6 @@ def test_invalid_construction_raises_error(content: str):
         VarBlock(content=content)
 
 
-@pytest.fixture()
-def context_vars_content() -> str:
-    return "input"
-
-
-@pytest.fixture()
-def context_vars(
-    context_vars_content: str, variables: t.Dict[str, str]
-) -> ContextVariables:
-    return ContextVariables(content=context_vars_content, **variables)
-
-
 @pytest.mark.parametrize(
     "variables, expected",
     [

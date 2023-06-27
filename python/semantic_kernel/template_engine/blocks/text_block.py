@@ -2,7 +2,7 @@
 
 from typing import Optional, Tuple
 
-from semantic_kernel.logging_ import SKLogger
+from semantic_kernel.logging_ import NullLogger, SKLogger
 from semantic_kernel.orchestration.context_variables import ContextVariables
 from semantic_kernel.template_engine.blocks.block import Block
 from semantic_kernel.template_engine.blocks.block_types import BlockTypes
@@ -10,6 +10,9 @@ from semantic_kernel.template_engine.protocols.text_renderer import TextRenderer
 
 
 class TextBlock(Block, TextRenderer):
+    content: str = ""
+    type: BlockTypes = BlockTypes.TEXT
+
     @classmethod
     def from_text(
         cls,
@@ -18,8 +21,9 @@ class TextBlock(Block, TextRenderer):
         stop_index: Optional[int] = None,
         logger: Optional[SKLogger] = None,
     ):
+        logger = logger or NullLogger()
         if start_index is not None and stop_index is not None:
-            if start_index > stop_index:
+            if start_index >= stop_index:
                 raise ValueError(
                     f"start_index ({start_index}) must be less than "
                     f"stop_index ({stop_index})"
@@ -33,12 +37,8 @@ class TextBlock(Block, TextRenderer):
             text = text[start_index:]
         elif stop_index is not None:
             text = text[:stop_index]
-
+        print("--------- ", text, type(text))
         return cls(content=text, logger=logger)
-
-    @property
-    def type(self) -> BlockTypes:
-        return BlockTypes.TEXT
 
     def is_valid(self) -> Tuple[bool, str]:
         return True, ""
